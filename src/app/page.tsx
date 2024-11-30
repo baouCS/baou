@@ -6,10 +6,13 @@ import { useRouter } from "next/navigation";
 import Swal from "sweetalert2";
 
 const Login: React.FC = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-
+  const [formData, setFormData] = useState({ email: "", password: "" });
   const router = useRouter();
+
+  const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -17,10 +20,8 @@ const Login: React.FC = () => {
     try {
       const response = await fetch("/api/auth/login", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email, password }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
       });
 
       const data = await response.json();
@@ -62,64 +63,44 @@ const Login: React.FC = () => {
     }
   };
 
-  const handleEmailChange = (event: ChangeEvent<HTMLInputElement>) => {
-    setEmail(event.target.value);
-  };
-
-  const handlePasswordChange = (event: ChangeEvent<HTMLInputElement>) => {
-    setPassword(event.target.value);
-  };
+  const inputFields = [
+    { name: "email", type: "email", label: "Email" },
+    { name: "password", type: "password", label: "Password" },
+  ];
 
   return (
     <main className="flex justify-center items-center h-screen bg-gray-100">
       <div className="w-full max-w-md bg-white p-8 rounded-xl shadow-2xl border-4 border-blue-200 animate-border-rgb">
-        <h2 className="text-lg text-gray-700 font-semibold text-center mb-8">
-          Login Now
-        </h2>
+        <h1 className="mb-6 text-2xl font-bold text-gray-800 text-center">
+          Login
+        </h1>
 
         <form onSubmit={handleLogin}>
-          <fieldset className="mb-4">
-            <legend className="sr-only">Login Credentials</legend>
-            <label
-              htmlFor="email"
-              className="block text-gray-700 font-semibold mb-2"
-            >
-              Email
-            </label>
-            <input
-              type="email"
-              id="email"
-              name="email"
-              className="w-full text-gray-500 px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              value={email}
-              onChange={handleEmailChange}
-              required
-            />
-          </fieldset>
-
-          <fieldset className="mb-6">
-            <legend className="sr-only">Password</legend>
-            <label
-              htmlFor="password"
-              className="block text-gray-700 font-semibold mb-2"
-            >
-              Password
-            </label>
-            <input
-              type="password"
-              id="password"
-              name="password"
-              className="w-full text-gray-500 px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              value={password}
-              onChange={handlePasswordChange}
-              required
-            />
-          </fieldset>
+          {inputFields.map((field) => (
+            <fieldset key={field.name} className="mb-4">
+              <legend className="sr-only">{field.label}</legend>
+              <label
+                htmlFor={field.name}
+                className="block text-gray-700 font-semibold mb-2"
+              >
+                {field.label}
+              </label>
+              <input
+                type={field.type}
+                id={field.name}
+                name={field.name}
+                className="w-full text-gray-500 px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value={formData[field.name as keyof typeof formData]}
+                onChange={handleInputChange}
+                required
+              />
+            </fieldset>
+          ))}
 
           <div className="mb-4 text-center">
             <button
               type="submit"
-              className="w-full bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600 transition duration-300"
+              className="w-full bg-[#92B5F4] text-white py-2 px-4 rounded-lg hover:bg-blue-500 transition duration-300"
             >
               Login
             </button>
