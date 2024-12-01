@@ -97,15 +97,15 @@ const Signup: React.FC = () => {
         // Swal success notification
         await Swal.fire({
           title: "Signup Successful!",
-          text: "You are now registered. Redirecting to your dashboard...",
+          text: "You are now registered. Redirecting to your home...",
           icon: "success",
-          confirmButtonText: "Go to Dashboard",
+          confirmButtonText: "Go to home",
           timer: 3000,
           timerProgressBar: true,
         });
 
-        // Redirect to the dashboard
-        window.location.href = "/dashboard"; // Replace with your app's dashboard route
+        // Redirect to the home
+        window.location.href = "/home"; // Replace with your app's home route
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } catch (error: any) {
         // Swal error notification
