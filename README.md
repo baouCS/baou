@@ -1,36 +1,40 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+## Introduction
 
-## Getting Started
+This is a Next.js project that uses pnpm as the package manager and Firebase as the database. The project is designed to be a scalable and efficient web application with real-time database capabilities.
 
-First, run the development server:
+## Features
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+- **Next.js**: A React framework for server-side rendering and static site generation.
+- **pnpm**: A fast, disk space-efficient package manager.
+- **Firebase**: A platform for building web and mobile applications with real-time database, authentication, and hosting.
+- **Vercel**: Used hosting site.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Installation
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+To get started with this project, follow these steps:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Prerequisite
 
-## Learn More
+- Node.js `https://nodejs.org/en/download/prebuilt-installer`
+- pnpm `https://pnpm.io/installation`
+- Git `https://git-scm.com/downloads`(optional)
 
-To learn more about Next.js, take a look at the following resources:
+1. **Clone the repository**:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+   `git clone https://github.com/Caritas-200/caritas.git`
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+   ` cd caritas`
 
-## Deploy on Vercel
+2. **Install Dependencies using pnpm**
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+`pnpm install`
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+3. **create environment file**
+   Note: copy this file to the root of the file with the name ".env" to enable firebase features like database.
+   `https://drive.google.com/file/d/1MgXicTwj-AFUR37ggrKZyxNDocvGRfbB/view?usp=sharing`
+
+4. **Run Development**
+
+`pnpm dev`
+
+Open [http://localhost:3000]
