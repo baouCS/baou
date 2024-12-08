@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useRef, useEffect } from "react";
 import {
   FaHome,
   FaUser,
@@ -29,10 +29,21 @@ const Home: React.FC = () => {
   const [activeDropdownId, setActiveDropdownId] = useState<number | null>(null);
   const [isEmojiPickerOpen, setIsEmojiPickerOpen] = useState(false);
 
+  const emojiPickerRef = useRef<HTMLDivElement>(null);
+
   const handleEmojiClick = useCallback((emojiData: EmojiClickData) => {
     setText((prev) => `${prev}${emojiData.emoji}`);
     setIsEmojiPickerOpen(false);
   }, []);
+
+  const handleOutsideClick = (event: MouseEvent) => {
+    if (
+      emojiPickerRef.current &&
+      !emojiPickerRef.current.contains(event.target as Node)
+    ) {
+      setIsEmojiPickerOpen(false);
+    }
+  };
 
   const statusColors: Record<string, string> = {
     Neutral: "#ffffff",
@@ -123,14 +134,34 @@ const Home: React.FC = () => {
     setActiveDropdownId((prev) => (prev === id ? null : id));
   };
 
+  useEffect(() => {
+    if (isEmojiPickerOpen) {
+      document.addEventListener("click", handleOutsideClick);
+    } else {
+      document.removeEventListener("click", handleOutsideClick);
+    }
+    return () => {
+      document.removeEventListener("click", handleOutsideClick);
+    };
+  }, [isEmojiPickerOpen]);
+
   return (
-    <div className="relative flex flex-col h-screen bg-gray-100">
+    <div className="flex flex-col h-screen bg-gray-100">
       <header className="flex justify-between items-center p-4 bg-blue-500 text-white">
         <FaHome size={24} />
         <FaUser size={24} />
       </header>
 
-      <div className="flex flex-col items-center p-4 bg-white shadow-md">
+      <div className="relative flex flex-col items-center p-4 bg-white shadow-md">
+        {/* Emoji Picker */}
+        {isEmojiPickerOpen && (
+          <div
+            ref={emojiPickerRef}
+            className="absolute top-full mt-2 z-50 bg-white shadow-lg rounded-lg"
+          >
+            <EmojiPicker onEmojiClick={handleEmojiClick} />
+          </div>
+        )}
         <textarea
           className="w-full text-gray-500 h-24 p-2 border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-400"
           value={text}
@@ -167,7 +198,7 @@ const Home: React.FC = () => {
         </div>
       </div>
 
-      <div className="relative flex-1 overflow-y-auto p-4">
+      <div className=" flex-1 overflow-y-auto p-4">
         {posts.map((post) => (
           <div
             key={post.id}
@@ -227,12 +258,6 @@ const Home: React.FC = () => {
             </div>
           </div>
         ))}
-        {/* Emoji Picker */}
-        {isEmojiPickerOpen && (
-          <div className="absolute top-full mt-2 z-50 bg-white shadow-lg rounded-lg">
-            <EmojiPicker onEmojiClick={handleEmojiClick} />
-          </div>
-        )}
         {posts.length === 0 && (
           <p className="text-gray-500 text-center">
             No posts yet. Be the first to share something!
