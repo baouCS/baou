@@ -21,7 +21,7 @@ To get started with this project, follow these steps:
 
 1. **Clone the repository**:
 
-   `git clone https://github.com/Caritas-200/caritas.git`
+   `git clone https://github.com/baouCS/baou.git`
 
    ` cd caritas`
 
