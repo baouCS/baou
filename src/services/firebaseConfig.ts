@@ -2,11 +2,7 @@
 import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
-import {
-  getAuth,
-  setPersistence,
-  browserLocalPersistence,
-} from "firebase/auth";
+import { getAuth } from "firebase/auth";
 
 // import { getAnalytics } from "firebase/analytics";
 // TODO: Add SDKs for Firebase products that you want to use
@@ -29,13 +25,6 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 
 const auth = getAuth(app);
-setPersistence(auth, browserLocalPersistence)
-  .then(() => {
-    console.log("Persistence set to local.");
-  })
-  .catch((error) => {
-    console.error("Error setting persistence:", error);
-  });
 
 // Create Firestore instance
 const db = getFirestore(app);

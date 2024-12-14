@@ -4,6 +4,7 @@ import React, { useState, ChangeEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Swal from "sweetalert2";
+import { login } from "./api/auth/data";
 
 const Login: React.FC = () => {
   const [formData, setFormData] = useState({ email: "", password: "" });
@@ -17,51 +18,75 @@ const Login: React.FC = () => {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    try {
-      const response = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+    const response = await login(formData.email, formData.password);
+
+    if (!response.error) {
+      Swal.fire({
+        title: "Login Success!",
+        text: "You have successfully logged in.",
+        icon: "success",
+        confirmButtonText: "OK",
+      }).then(() => {
+        router.push("/home");
       });
-
-      const data = await response.json();
-
-      if (response.ok && !data.error) {
-        const Toast = Swal.mixin({
-          toast: true,
-          position: "top-end",
-          showConfirmButton: false,
-          timer: 900,
-          timerProgressBar: true,
-          didOpen: (toast) => {
-            toast.onmouseenter = Swal.stopTimer;
-            toast.onmouseleave = Swal.resumeTimer;
-          },
-        });
-        Toast.fire({
-          icon: "success",
-          title: "Signed in successfully",
-        }).then(() => {
-          router.push("/home");
-        });
-      } else {
-        Swal.fire({
-          title: "Login Failed",
-          text: data.message || "Invalid email or password.",
-          icon: "error",
-          confirmButtonText: "Try Again",
-        });
-      }
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    } catch (error) {
+    } else {
       Swal.fire({
         title: "Login Failed",
-        text: "An unexpected error occurred.",
+        text: response.message || "Invalid email or password.",
         icon: "error",
         confirmButtonText: "Try Again",
       });
     }
   };
+
+  // const handleLogin = async (e: React.FormEvent) => {
+  //   e.preventDefault();
+
+  //   try {
+  //     const response = await fetch("/api/auth/login", {
+  //       method: "POST",
+  //       headers: { "Content-Type": "application/json" },
+  //       body: JSON.stringify(formData),
+  //     });
+
+  //     const data = await response.json();
+
+  //     if (response.ok && !data.error) {
+  //       const Toast = Swal.mixin({
+  //         toast: true,
+  //         position: "top-end",
+  //         showConfirmButton: false,
+  //         timer: 900,
+  //         timerProgressBar: true,
+  //         didOpen: (toast) => {
+  //           toast.onmouseenter = Swal.stopTimer;
+  //           toast.onmouseleave = Swal.resumeTimer;
+  //         },
+  //       });
+  //       Toast.fire({
+  //         icon: "success",
+  //         title: "Signed in successfully",
+  //       }).then(() => {
+  //         router.push("/home");
+  //       });
+  //     } else {
+  //       Swal.fire({
+  //         title: "Login Failed",
+  //         text: data.message || "Invalid email or password.",
+  //         icon: "error",
+  //         confirmButtonText: "Try Again",
+  //       });
+  //     }
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  //   } catch (error) {
+  //     Swal.fire({
+  //       title: "Login Failed",
+  //       text: "An unexpected error occurred.",
+  //       icon: "error",
+  //       confirmButtonText: "Try Again",
+  //     });
+  //   }
+  // };
 
   const inputFields = [
     { name: "email", type: "email", label: "Email" },

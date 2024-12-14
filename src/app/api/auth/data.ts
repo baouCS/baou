@@ -1,4 +1,79 @@
-import { auth } from "@/services/firebaseConfig";
+import { db, auth } from "@/services/firebaseConfig";
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { createUserWithEmailAndPassword } from "firebase/auth";
+import { Timestamp, setDoc, doc } from "firebase/firestore";
+
+interface SignUpData {
+  username: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+}
+
+interface SignUpResponse {
+  message: string;
+  error: boolean;
+  status: number | string;
+}
+
+export const signup = async (data: SignUpData): Promise<SignUpResponse> => {
+  const dateCreated = Timestamp.fromDate(new Date());
+
+  try {
+    // Signup using createUserWithEmailAndPassword function of Firebase
+    await createUserWithEmailAndPassword(auth, data.email, data.password);
+
+    // Get the user object after signup
+    const user = auth.currentUser;
+
+    if (!user) {
+      throw new Error("User not found after signup.");
+    }
+
+    // Use user.uid as the docId
+    const userDocRef = doc(db, "users", user.uid);
+
+    // Exclude the password and confirmPassword fields from the data
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { password, confirmPassword, ...userData } = data;
+
+    // Set the data in the document
+    await setDoc(userDocRef, {
+      ...userData,
+      userId: user.uid,
+      dateCreated,
+    });
+
+    return {
+      message: "Account successfully created!",
+      error: false,
+      status: 201,
+    };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } catch (error: any) {
+    return { error: true, message: error.message, status: error.code };
+  }
+};
+
+export async function login(email: string, password: string) {
+  try {
+    const userCredential = await signInWithEmailAndPassword(
+      auth,
+      email,
+      password
+    );
+    const user = userCredential.user;
+
+    return { error: false, user };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } catch (error: any) {
+    return {
+      error: true,
+      message: error.message,
+      status: error.code,
+    };
+  }
+}
 
 export const logoutUser = async (): Promise<void> => {
   try {

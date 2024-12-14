@@ -5,6 +5,8 @@ import { FaSmile, FaEllipsisV, FaThumbsUp, FaThumbsDown } from "react-icons/fa";
 import EmojiPicker, { EmojiClickData } from "emoji-picker-react";
 import { toSentenceCase } from "@/app/utils/toSentenceCase";
 import Header from "@/app/components/header";
+// import useAuth from "@/app/hooks/useAuth";
+import { auth } from "@/services/firebaseConfig";
 
 const Home: React.FC = () => {
   const [posts, setPosts] = useState<
@@ -23,7 +25,6 @@ const Home: React.FC = () => {
   const [editPostId, setEditPostId] = useState<number | null>(null);
   const [activeDropdownId, setActiveDropdownId] = useState<number | null>(null);
   const [isEmojiPickerOpen, setIsEmojiPickerOpen] = useState(false);
-
   const emojiPickerRef = useRef<HTMLDivElement>(null);
 
   const handleEmojiClick = useCallback((emojiData: EmojiClickData) => {
@@ -139,6 +140,10 @@ const Home: React.FC = () => {
     };
   }, [isEmojiPickerOpen]);
 
+  // useAuth();
+
+  console.log(auth.currentUser);
+
   return (
     <div className="flex  flex-col items-center  h-screen bg-gray-100 overflow-hidden">
       <Header />
@@ -202,7 +207,7 @@ const Home: React.FC = () => {
             >
               <div className="flex justify-between gap-2">
                 <div className="w-full">
-                  <p className="text-gray-600 font-medium whitespace-pre-wrap p-2 bg-slate-100 shadow-inner bg-opacity-10 border-gray-500 border-b border-opacity-5 rounded-md py-4 ">
+                  <p className="text-gray-500 font-medium whitespace-pre-wrap p-2 bg-slate-100 shadow-inner bg-opacity-10 border-gray-500 border-b border-opacity-5 rounded-md py-4 ">
                     {toSentenceCase(post.text)}
                   </p>
                 </div>
