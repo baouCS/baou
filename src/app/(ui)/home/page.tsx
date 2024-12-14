@@ -5,7 +5,6 @@ import { FaSmile, FaEllipsisV, FaThumbsUp, FaThumbsDown } from "react-icons/fa";
 import EmojiPicker, { EmojiClickData } from "emoji-picker-react";
 import { toSentenceCase } from "@/app/utils/toSentenceCase";
 import Header from "@/app/components/header";
-// import useAuth from "@/app/hooks/useAuth";
 import { auth } from "@/services/firebaseConfig";
 
 const Home: React.FC = () => {
@@ -26,6 +25,8 @@ const Home: React.FC = () => {
   const [activeDropdownId, setActiveDropdownId] = useState<number | null>(null);
   const [isEmojiPickerOpen, setIsEmojiPickerOpen] = useState(false);
   const emojiPickerRef = useRef<HTMLDivElement>(null);
+
+  const currentUser = auth.currentUser?.email;
 
   const handleEmojiClick = useCallback((emojiData: EmojiClickData) => {
     setText((prev) => `${prev}${emojiData.emoji}`);
@@ -140,64 +141,66 @@ const Home: React.FC = () => {
     };
   }, [isEmojiPickerOpen]);
 
-  // useAuth();
-
-  console.log(auth.currentUser);
-
   return (
     <div className="flex  flex-col items-center  h-screen bg-gray-100 overflow-hidden">
       <Header />
 
       <div className="flex items-center w-full max-w-3xl flex-col lg:px-4 lg:bg-gray-200 h-full">
-        <div className="relative rounded-b-lg w-full flex flex-col items-center p-4 bg-white shadow-md">
-          {/* Emoji Picker */}
-          {isEmojiPickerOpen && (
-            <div
-              ref={emojiPickerRef}
-              className="absolute top-full mt-2 z-50 bg-white shadow-lg rounded-lg"
-            >
-              <EmojiPicker onEmojiClick={handleEmojiClick} />
-            </div>
-          )}
-          <textarea
-            className="w-full text-gray-500 h-24 p-2 border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-400"
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            placeholder="What's on your mind?"
-          />
-          <div className="flex items-center mt-2 space-x-4">
-            <div className="">
-              <button
-                className="bg-blue-500 p-2 rounded-lg hover:bg-blue-600 transition"
-                onClick={() => setIsEmojiPickerOpen((prev) => !prev)}
+        {currentUser && currentUser.toLowerCase() == "superadmin@gmail.com" ? (
+          <div className="relative rounded-b-lg w-full flex flex-col items-center p-4 bg-white shadow-md">
+            {/* Emoji Picker */}
+            {isEmojiPickerOpen && (
+              <div
+                ref={emojiPickerRef}
+                className="absolute top-full mt-2 z-50 bg-white shadow-lg rounded-lg"
               >
-                <FaSmile />
+                <EmojiPicker onEmojiClick={handleEmojiClick} />
+              </div>
+            )}
+
+            <textarea
+              className="w-full text-gray-500 h-24 p-2 border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-400"
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+              placeholder="What's on your mind?"
+            />
+            <div className="flex items-center mt-2 space-x-4">
+              <div className="">
+                <button
+                  className="bg-blue-500 p-2 rounded-lg hover:bg-blue-600 transition"
+                  onClick={() => setIsEmojiPickerOpen((prev) => !prev)}
+                >
+                  <FaSmile />
+                </button>
+              </div>
+
+              <select
+                value={status}
+                onChange={(e) => setStatus(e.target.value)}
+                className="p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 text-gray-500"
+              >
+                {Object.entries(statusColors).map(([key, color]) => (
+                  <option
+                    key={key}
+                    value={key}
+                    style={{ backgroundColor: color }}
+                  >
+                    {key}
+                  </option>
+                ))}
+              </select>
+              <button
+                className="bg-blue-500 text-white py-1 px-4 rounded-lg hover:bg-blue-600 transition"
+                onClick={editPostId === null ? handlePost : handleUpdate}
+              >
+                {editPostId === null ? "Post" : "Update"}
               </button>
             </div>
-
-            <select
-              value={status}
-              onChange={(e) => setStatus(e.target.value)}
-              className="p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 text-gray-500"
-            >
-              {Object.entries(statusColors).map(([key, color]) => (
-                <option
-                  key={key}
-                  value={key}
-                  style={{ backgroundColor: color }}
-                >
-                  {key}
-                </option>
-              ))}
-            </select>
-            <button
-              className="bg-blue-500 text-white py-1 px-4 rounded-lg hover:bg-blue-600 transition"
-              onClick={editPostId === null ? handlePost : handleUpdate}
-            >
-              {editPostId === null ? "Post" : "Update"}
-            </button>
           </div>
-        </div>
+        ) : (
+          ""
+        )}
+
         <div className=" flex-1 w-full overflow-y-auto  p-4 pb-20">
           {posts.map((post) => (
             <div
@@ -258,9 +261,16 @@ const Home: React.FC = () => {
               </div>
             </div>
           ))}
-          {posts.length === 0 && (
+          {currentUser &&
+          currentUser.toLowerCase() == "superadmin@gmail.com" ? (
+            posts.length === 0 && (
+              <p className="text-gray-500 text-center">
+                No posts yet. Be the first to share something !
+              </p>
+            )
+          ) : (
             <p className="text-gray-500 text-center">
-              No posts yet. Be the first to share something!
+              No posts yet. Please check again later !
             </p>
           )}
         </div>
