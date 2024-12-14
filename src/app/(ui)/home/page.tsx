@@ -7,6 +7,8 @@ import { toSentenceCase } from "@/app/utils/toSentenceCase";
 import Header from "@/app/components/header";
 import { auth } from "@/services/firebaseConfig";
 
+import { addPost, fetchPosts } from "@/app/api/post/data";
+
 const Home: React.FC = () => {
   const [posts, setPosts] = useState<
     {
@@ -25,8 +27,36 @@ const Home: React.FC = () => {
   const [activeDropdownId, setActiveDropdownId] = useState<number | null>(null);
   const [isEmojiPickerOpen, setIsEmojiPickerOpen] = useState(false);
   const emojiPickerRef = useRef<HTMLDivElement>(null);
+  const [loading, setLoading] = useState(true);
+
+  const skeletonStyle = "animate-pulse bg-gray-300 rounded-md";
 
   const currentUser = auth.currentUser?.email;
+
+  const fetchData = async () => {
+    try {
+      const result = await fetchPosts();
+      console.log(result);
+
+      if (result.posts) {
+        // Add the new posts to the state only if they don't already exist
+        setPosts((prevPosts) => {
+          const newPosts = result.posts.filter(
+            (newPost) =>
+              !prevPosts.some((existingPost) => existingPost.id === newPost.id)
+          );
+
+          // Return the updated posts array with new posts added
+          setLoading(false);
+          return [...newPosts, ...prevPosts];
+        });
+      } else {
+        console.error("Failed to fetch posts");
+      }
+    } catch (error) {
+      console.error("Error fetching posts:", error);
+    }
+  };
 
   const handleEmojiClick = useCallback((emojiData: EmojiClickData) => {
     setText((prev) => `${prev}${emojiData.emoji}`);
@@ -60,7 +90,7 @@ const Home: React.FC = () => {
     });
   };
 
-  const handlePost = () => {
+  const handlePost = async () => {
     if (!text.trim()) return;
 
     const newPost = {
@@ -73,6 +103,20 @@ const Home: React.FC = () => {
       dislikes: 0,
     };
 
+    try {
+      // Use the addPost hook to add the new post
+      const result = await addPost(newPost);
+
+      if (result) {
+        console.log(result);
+      } else {
+        console.error("Failed to add post.");
+      }
+    } catch (error) {
+      console.error("Error adding post:", error);
+    }
+
+    // Reset the text and status
     setPosts([newPost, ...posts]);
     setText("");
     setStatus("Neutral");
@@ -141,12 +185,16 @@ const Home: React.FC = () => {
     };
   }, [isEmojiPickerOpen]);
 
+  useEffect(() => {
+    fetchData();
+  }, []);
+
   return (
     <div className="flex  flex-col items-center  h-screen bg-gray-100 overflow-hidden">
       <Header />
 
       <div className="flex items-center w-full max-w-3xl flex-col lg:px-4 lg:bg-gray-200 h-full">
-        {currentUser && currentUser.toLowerCase() == "superadmin@gmail.com" ? (
+        {currentUser && currentUser.toLowerCase() == "admin@gmail.com" ? (
           <div className="relative rounded-b-lg w-full flex flex-col items-center p-4 bg-white shadow-md">
             {/* Emoji Picker */}
             {isEmojiPickerOpen && (
@@ -202,77 +250,105 @@ const Home: React.FC = () => {
         )}
 
         <div className=" flex-1 w-full overflow-y-auto  p-4 pb-20">
-          {posts.map((post) => (
-            <div
-              key={post.id}
-              className="mb-4 p-4 rounded-lg shadow-lg  "
-              style={{ backgroundColor: post.bgColor }}
-            >
-              <div className="flex justify-between gap-2">
-                <div className="w-full">
-                  <p className="text-gray-500 font-medium whitespace-pre-wrap p-2 bg-slate-100 shadow-inner bg-opacity-10 border-gray-500 border-b border-opacity-5 rounded-md py-4 ">
-                    {toSentenceCase(post.text)}
-                  </p>
-                </div>
-                <div className="relative">
-                  <button
-                    className="text-gray-300 hover:text-gray-500 focus:outline-none"
-                    onClick={() => toggleDropdown(post.id)}
+          {loading
+            ? // Skeleton Loader
+              Array(5)
+                .fill(0) // Repeat the skeleton 5 times (adjust as needed)
+                .map((_, index) => (
+                  <div
+                    key={index}
+                    className="mb-4 p-4 rounded-lg shadow-lg bg-white"
                   >
-                    <FaEllipsisV />
-                  </button>
-                  {activeDropdownId === post.id && (
-                    <div className="absolute right-0 mt-2 w-40 bg-white rounded-md shadow-lg z-10">
+                    <div className="flex justify-between gap-2">
+                      <div className="w-full">
+                        <div className={`h-10 ${skeletonStyle}`} />
+                      </div>
+                    </div>
+                    <div className="flex gap-4 justify-between">
+                      <div className={`w-32 h-4 mt-6 ${skeletonStyle}`} />
+                      <div className="flex justify-end space-x-2 mt-2">
+                        <div className={`w-8 h-8 ${skeletonStyle}`} />
+                        <div className={`w-8 h-8 ${skeletonStyle}`} />
+                      </div>
+                    </div>
+                  </div>
+                ))
+            : // Render posts
+              posts.map((post) => (
+                <div
+                  key={post.id}
+                  className="mb-4 p-4 rounded-lg shadow-lg"
+                  style={{ backgroundColor: post.bgColor }}
+                >
+                  <div className="flex justify-between gap-2">
+                    <div className="w-full">
+                      <p className="text-gray-500 font-medium whitespace-pre-wrap p-2 bg-slate-100 shadow-inner bg-opacity-10 border-gray-500 border-b border-opacity-5 rounded-md py-4">
+                        {toSentenceCase(post.text)}
+                      </p>
+                    </div>
+                    {currentUser == "admin@gmail.com" && (
+                      <div className="relative">
+                        <button
+                          className="text-gray-300 hover:text-gray-500 focus:outline-none"
+                          onClick={() => toggleDropdown(post.id)}
+                        >
+                          <FaEllipsisV />
+                        </button>
+                        {activeDropdownId === post.id && (
+                          <div className="absolute right-0 mt-2 w-40 bg-white rounded-md shadow-lg z-10">
+                            <button
+                              className="block px-4 py-2 text-gray-700 hover:bg-gray-100"
+                              onClick={() => handleEdit(post.id)}
+                            >
+                              Edit
+                            </button>
+                            <button
+                              className="block px-4 py-2 text-red-600 hover:bg-gray-100"
+                              onClick={() => handleDelete(post.id)}
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex gap-4 justify-between">
+                    <p className="text-xs text-gray-500 mt-4">{post.date}</p>
+                    <div className="flex justify-end space-x-4 mt-2">
                       <button
-                        className="block px-4 py-2 text-gray-700 hover:bg-gray-100"
-                        onClick={() => handleEdit(post.id)}
+                        className="flex items-center text-gray-500 hover:text-blue-600 transition"
+                        onClick={() => handleLike(post.id)}
                       >
-                        Edit
+                        <FaThumbsUp className="mr-1" />
+                        <span>{post.likes}</span>
                       </button>
                       <button
-                        className="block px-4 py-2 text-red-600 hover:bg-gray-100"
-                        onClick={() => handleDelete(post.id)}
+                        className="flex items-center text-gray-500 hover:text-red-600 transition"
+                        onClick={() => handleDislike(post.id)}
                       >
-                        Delete
+                        <FaThumbsDown className="mr-1" />
+                        <span>{post.dislikes}</span>
                       </button>
                     </div>
-                  )}
+                  </div>
                 </div>
-              </div>
+              ))}
 
-              <div className="flex gap-4 justify-between">
-                <p className="text-xs text-gray-500 mt-4">{post.date}</p>
-                <div className="flex justify-end space-x-4 mt-2">
-                  <button
-                    className="flex items-center text-gray-500 hover:text-blue-600 transition"
-                    onClick={() => handleLike(post.id)}
-                  >
-                    <FaThumbsUp className="mr-1" />
-                    <span>{post.likes}</span>
-                  </button>
-                  <button
-                    className="flex items-center text-gray-500 hover:text-red-600 transition"
-                    onClick={() => handleDislike(post.id)}
-                  >
-                    <FaThumbsDown className="mr-1" />
-                    <span>{post.dislikes}</span>
-                  </button>
-                </div>
-              </div>
-            </div>
-          ))}
-          {currentUser &&
-          currentUser.toLowerCase() == "superadmin@gmail.com" ? (
-            posts.length === 0 && (
-              <p className="text-gray-500 text-center">
-                No posts yet. Be the first to share something !
-              </p>
-            )
-          ) : (
-            <p className="text-gray-500 text-center">
-              No posts yet. Please check again later !
-            </p>
-          )}
+          {!loading
+            ? currentUser && currentUser.toLowerCase() == "admin@gmail.com"
+              ? posts.length === 0 && (
+                  <p className="text-gray-500 text-center">
+                    No posts yet. Be the first to share something !
+                  </p>
+                )
+              : posts.length === 0 && (
+                  <p className="text-gray-500 text-center">
+                    No posts yet. Please check again later !
+                  </p>
+                )
+            : ""}
         </div>
       </div>
     </div>

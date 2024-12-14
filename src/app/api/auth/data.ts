@@ -2,21 +2,9 @@ import { db, auth } from "@/services/firebaseConfig";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { Timestamp, setDoc, doc } from "firebase/firestore";
+import { SignUpResponse, signupFormData } from "@/app/lib/definitions";
 
-interface SignUpData {
-  username: string;
-  email: string;
-  password: string;
-  confirmPassword: string;
-}
-
-interface SignUpResponse {
-  message: string;
-  error: boolean;
-  status: number | string;
-}
-
-export const signup = async (data: SignUpData): Promise<SignUpResponse> => {
+export const signup = async (data: signupFormData): Promise<SignUpResponse> => {
   const dateCreated = Timestamp.fromDate(new Date());
 
   try {
