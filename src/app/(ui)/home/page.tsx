@@ -1,16 +1,10 @@
 "use client";
 
 import React, { useState, useCallback, useRef, useEffect } from "react";
-import {
-  FaHome,
-  FaUser,
-  FaSmile,
-  FaEllipsisV,
-  FaThumbsUp,
-  FaThumbsDown,
-} from "react-icons/fa";
+import { FaSmile, FaEllipsisV, FaThumbsUp, FaThumbsDown } from "react-icons/fa";
 import EmojiPicker, { EmojiClickData } from "emoji-picker-react";
 import { toSentenceCase } from "@/app/utils/toSentenceCase";
+import Header from "@/app/components/header";
 
 const Home: React.FC = () => {
   const [posts, setPosts] = useState<
@@ -147,10 +141,7 @@ const Home: React.FC = () => {
 
   return (
     <div className="flex  flex-col items-center  h-screen bg-gray-100 overflow-hidden">
-      <header className="flex justify-between w-full items-center p-4 bg-blue-500 text-white">
-        <FaHome size={24} />
-        <FaUser size={24} />
-      </header>
+      <Header />
 
       <div className="flex items-center w-full max-w-3xl flex-col lg:px-4 lg:bg-gray-200 h-full">
         <div className="relative rounded-b-lg w-full flex flex-col items-center p-4 bg-white shadow-md">
