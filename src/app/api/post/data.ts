@@ -5,6 +5,7 @@ import {
   getDocs,
   updateDoc,
   doc,
+  deleteDoc,
 } from "firebase/firestore";
 import { Post } from "@/app/lib/definitions";
 import { getFormattedDate } from "@/app/utils/formatDate";
@@ -98,6 +99,26 @@ export const updatePost = async ({ docId, updates }: UpdatePostData) => {
     };
   } catch (error) {
     console.error("Error updating post: ", error);
+    return {
+      success: false,
+      message: error || "An error occurred",
+    };
+  }
+};
+
+export const deletePost = async (docId: string) => {
+  try {
+    const postRef = doc(db, "posts", docId);
+
+    // Delete the document
+    await deleteDoc(postRef);
+
+    return {
+      success: true,
+      message: "Post deleted successfully",
+    };
+  } catch (error) {
+    console.error("Error deleting post: ", error);
     return {
       success: false,
       message: error || "An error occurred",

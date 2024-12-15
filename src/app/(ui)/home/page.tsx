@@ -9,7 +9,12 @@ import { auth } from "@/services/firebaseConfig";
 import { getFormattedDate } from "@/app/utils/formatDate";
 import Swal from "sweetalert2";
 
-import { addPost, fetchPosts, updatePost } from "@/app/api/post/data";
+import {
+  addPost,
+  fetchPosts,
+  updatePost,
+  deletePost,
+} from "@/app/api/post/data";
 
 const Home: React.FC = () => {
   const [posts, setPosts] = useState<
@@ -91,17 +96,12 @@ const Home: React.FC = () => {
       date: getFormattedDate(),
       likes: 0,
       dislikes: 0,
+      docId,
     };
 
     try {
       // Use the addPost hook to add the new post
       const result = await addPost(newPost);
-
-      if (result) {
-        console.log(result);
-      } else {
-        console.error("Failed to add post.");
-      }
     } catch (error) {
       console.error("Error adding post:", error);
     }
@@ -112,9 +112,25 @@ const Home: React.FC = () => {
     setStatus("Neutral");
   };
 
-  const handleDelete = (id: number) => {
-    setPosts((prev) => prev.filter((post) => post.id !== id));
+  const handleDelete = async (id: number, docId: string) => {
+    try {
+      // Call the delete API
+      const result = await deletePost(docId);
+
+      if (result.success) {
+        // Remove the post from the local state
+        setPosts((prev) => prev.filter((post) => post.docId !== docId));
+      } else {
+        console.error(result.message || "Failed to delete the post");
+      }
+    } catch (error) {
+      console.error("Error during delete operation: ", error);
+    }
   };
+
+  // const handleDelete = (id: number) => {
+  //   setPosts((prev) => prev.filter((post) => post.id !== id));
+  // };
 
   const handleEdit = (id: number, docId: string) => {
     const postToEdit = posts.find((post) => post.id === id);
@@ -304,7 +320,7 @@ const Home: React.FC = () => {
                     {currentUser == "admin@gmail.com" && (
                       <div className="relative">
                         <button
-                          className="text-gray-300 hover:text-gray-500 focus:outline-none"
+                          className="text-gray-400 hover:text-gray-500 focus:outline-none"
                           onClick={() => toggleDropdown(post.id)}
                         >
                           <FaEllipsisV />
@@ -319,7 +335,7 @@ const Home: React.FC = () => {
                             </button>
                             <button
                               className="block px-4 py-2 text-red-600 hover:bg-gray-100"
-                              onClick={() => handleDelete(post.id)}
+                              onClick={() => handleDelete(post.id, post.docId)}
                             >
                               Delete
                             </button>
