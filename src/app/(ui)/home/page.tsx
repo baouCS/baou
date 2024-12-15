@@ -88,26 +88,40 @@ const Home: React.FC = () => {
   const handlePost = async () => {
     if (!text.trim()) return;
 
+    // Prepare the new post object (without docId initially)
     const newPost = {
       id: posts.length + 1,
       text: text.replace(/(\r?\n\s*\n){3,}/g, "\n\n"),
       status,
       bgColor: statusColors[status],
       date: getFormattedDate(),
-      likes: 0,
-      dislikes: 0,
-      docId,
     };
 
     try {
-      // Use the addPost hook to add the new post
+      // Use the addPost function to add the new post
       const result = await addPost(newPost);
+
+      if (result.success && result.post) {
+        // Include the docId returned from the API into the post object
+        const postWithDocId = {
+          ...newPost,
+          docId: result.post.docId ?? "",
+          likes: result.post.likes ?? 0,
+          dislikes: result.post.dislikes ?? 0,
+        };
+
+        // Update the state with the new post
+        setPosts([postWithDocId, ...posts]);
+        // Update the state with the new post
+        setPosts([postWithDocId, ...posts]);
+      } else {
+        console.error("Failed to add post:", result.message);
+      }
     } catch (error) {
       console.error("Error adding post:", error);
     }
 
-    // Reset the text and status
-    setPosts([newPost, ...posts]);
+    // Reset the input fields
     setText("");
     setStatus("Neutral");
   };
@@ -127,10 +141,6 @@ const Home: React.FC = () => {
       console.error("Error during delete operation: ", error);
     }
   };
-
-  // const handleDelete = (id: number) => {
-  //   setPosts((prev) => prev.filter((post) => post.id !== id));
-  // };
 
   const handleEdit = (id: number, docId: string) => {
     const postToEdit = posts.find((post) => post.id === id);
@@ -226,7 +236,7 @@ const Home: React.FC = () => {
 
       <div className="flex items-center w-full max-w-3xl flex-col lg:px-4 lg:bg-gray-200 h-full">
         {currentUser && currentUser.toLowerCase() == "admin@gmail.com" ? (
-          <div className="relative rounded-b-lg w-full flex flex-col items-center p-4 bg-white shadow-md">
+          <div className="relative  rounded-b-lg w-full flex flex-col items-center p-4 bg-white shadow-md">
             {/* Emoji Picker */}
             {isEmojiPickerOpen && (
               <div
@@ -238,7 +248,7 @@ const Home: React.FC = () => {
             )}
 
             <textarea
-              className="w-full text-gray-500 h-24 p-2 border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-400"
+              className="w-full text-gray-500  h-24 p-2 border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-400"
               value={text}
               onChange={(e) => setText(e.target.value)}
               placeholder="What's on your mind?"
