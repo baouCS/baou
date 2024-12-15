@@ -24,13 +24,22 @@ const Header: React.FC = () => {
 
   return (
     <header className="flex justify-between w-full items-center p-4 bg-blue-500 text-white">
-      <FaHome size={24} />
+      <div className="font-bold text-gray-100">
+        <h1 className=" ">
+          {" "}
+          <span>BOU |</span> BAYUYAN ONLINE UPDATE
+        </h1>
+      </div>
+
       <div className="relative">
-        <button
-          onClick={toggleDropdown} // Toggle dropdown on click
-        >
-          <FaUser size={24} />
-        </button>
+        <div className="flex gap-4 flex-row">
+          <button
+            onClick={toggleDropdown} // Toggle dropdown on click
+          >
+            <FaUser size={24} />
+          </button>
+          <FaHome size={30} />
+        </div>
 
         {/* Dropdown Menu */}
         {isDropdownOpen && (
