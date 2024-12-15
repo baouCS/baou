@@ -23,7 +23,7 @@ To get started with this project, follow these steps:
 
    `git clone https://github.com/baouCS/baou.git`
 
-   ` cd caritas`
+   ` cd baou`
 
 2. **Install Dependencies using pnpm**
 
