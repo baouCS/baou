@@ -7,12 +7,14 @@ import { toSentenceCase } from "@/app/utils/toSentenceCase";
 import Header from "@/app/components/header";
 import { auth } from "@/services/firebaseConfig";
 import { getFormattedDate } from "@/app/utils/formatDate";
+import Swal from "sweetalert2";
 
-import { addPost, fetchPosts } from "@/app/api/post/data";
+import { addPost, fetchPosts, updatePost } from "@/app/api/post/data";
 
 const Home: React.FC = () => {
   const [posts, setPosts] = useState<
     {
+      docId: string;
       id: number;
       text: string;
       status: string;
@@ -25,6 +27,7 @@ const Home: React.FC = () => {
   const [text, setText] = useState("");
   const [status, setStatus] = useState("Neutral");
   const [editPostId, setEditPostId] = useState<number | null>(null);
+  const [docId, setDocId] = useState<string>("");
   const [activeDropdownId, setActiveDropdownId] = useState<number | null>(null);
   const [isEmojiPickerOpen, setIsEmojiPickerOpen] = useState(false);
   const emojiPickerRef = useRef<HTMLDivElement>(null);
@@ -37,8 +40,6 @@ const Home: React.FC = () => {
   const fetchData = async () => {
     try {
       const result = await fetchPosts();
-      console.log(result);
-
       if (result.posts) {
         // Add the new posts to the state only if they don't already exist
         setPosts((prevPosts) => {
@@ -115,9 +116,10 @@ const Home: React.FC = () => {
     setPosts((prev) => prev.filter((post) => post.id !== id));
   };
 
-  const handleEdit = (id: number) => {
+  const handleEdit = (id: number, docId: string) => {
     const postToEdit = posts.find((post) => post.id === id);
     if (postToEdit) {
+      setDocId(docId);
       setEditPostId(id);
       setText(postToEdit.text);
       setStatus(postToEdit.status);
@@ -125,22 +127,62 @@ const Home: React.FC = () => {
     setActiveDropdownId(null); // Close dropdown
   };
 
-  const handleUpdate = () => {
-    setPosts((prev) =>
-      prev.map((post) =>
-        post.id === editPostId
-          ? {
-              ...post,
-              text: text.replace(/(\r?\n\s*\n){3,}/g, "\n\n"),
-              status,
-              bgColor: statusColors[status],
-            }
-          : post
-      )
-    );
-    setEditPostId(null);
-    setText("");
-    setStatus("Low");
+  const handleUpdate = async () => {
+    try {
+      // Build the updated post data
+      const updatedData = {
+        text: text.replace(/(\r?\n\s*\n){3,}/g, "\n\n"),
+        status,
+        bgColor: statusColors[status],
+      };
+
+      // Call the update API
+      const response = await updatePost({
+        docId: docId, // Pass the document ID of the post to update
+        updates: updatedData,
+      });
+
+      if (response.success) {
+        // Update the local state only if the Firestore update is successful
+        setPosts((prev) =>
+          prev.map((post) =>
+            post.id === editPostId ? { ...post, ...updatedData } : post
+          )
+        );
+
+        // Clear edit state
+        setEditPostId(null);
+        setText("");
+        setStatus("Low");
+
+        // Show success notification
+        Swal.fire({
+          icon: "success",
+          title: "Post Updated",
+          text: "The post has been updated successfully!",
+          timer: 1500,
+          showConfirmButton: false,
+        });
+      } else {
+        console.error("Failed to update the post:", response.message);
+
+        // Show error notification
+        Swal.fire({
+          icon: "error",
+          title: "Update Failed",
+          text: "Failed to update the post. Please try again.",
+        });
+      }
+    } catch (error) {
+      console.error("Error during post update:", error);
+
+      // Show error notification
+      Swal.fire({
+        icon: "error",
+        title: "Update Failed",
+        text: "An error occurred while updating the post. Please try again later.",
+      });
+    }
   };
 
   const toggleDropdown = (id: number) => {
@@ -271,7 +313,7 @@ const Home: React.FC = () => {
                           <div className="absolute right-0 mt-2 w-40 bg-white rounded-md shadow-lg z-10">
                             <button
                               className="block px-4 py-2 text-gray-700 hover:bg-gray-100"
-                              onClick={() => handleEdit(post.id)}
+                              onClick={() => handleEdit(post.id, post.docId)}
                             >
                               Edit
                             </button>

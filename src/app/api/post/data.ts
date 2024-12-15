@@ -1,5 +1,11 @@
 import { db } from "@/services/firebaseConfig"; // Your Firebase config
-import { collection, addDoc, getDocs } from "firebase/firestore";
+import {
+  collection,
+  addDoc,
+  getDocs,
+  updateDoc,
+  doc,
+} from "firebase/firestore";
 import { Post } from "@/app/lib/definitions";
 import { getFormattedDate } from "@/app/utils/formatDate";
 
@@ -57,6 +63,7 @@ export const fetchPosts = async () => {
         date: getFormattedDate(),
         likes: data.likes || 0,
         dislikes: data.dislikes || 0,
+        docId: doc.id,
       };
     });
 
@@ -66,6 +73,31 @@ export const fetchPosts = async () => {
     };
   } catch (error) {
     console.error("Error fetching posts: ", error);
+    return {
+      success: false,
+      message: error || "An error occurred",
+    };
+  }
+};
+
+interface UpdatePostData {
+  docId: string; // Document ID of the post to update
+  updates: Partial<Omit<Post, "docId">>; // Fields to update (excluding docId)
+}
+
+export const updatePost = async ({ docId, updates }: UpdatePostData) => {
+  try {
+    const postRef = doc(db, "posts", docId);
+
+    // Update the specified fields in the document
+    await updateDoc(postRef, updates);
+
+    return {
+      success: true,
+      message: "Post updated successfully",
+    };
+  } catch (error) {
+    console.error("Error updating post: ", error);
     return {
       success: false,
       message: error || "An error occurred",

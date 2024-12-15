@@ -12,6 +12,7 @@ export interface SignUpResponse {
 }
 
 export interface Post {
+  docId: string;
   id: number;
   text: string;
   status: string;
