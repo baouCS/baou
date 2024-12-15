@@ -1,13 +1,16 @@
 import { db } from "@/services/firebaseConfig"; // Your Firebase config
 import { collection, addDoc, getDocs } from "firebase/firestore";
 import { Post } from "@/app/lib/definitions";
+import { getFormattedDate } from "@/app/utils/formatDate";
 
 // Function to add a new post to Firebase Firestore
+
 export const addPost = async (
-  postData: Omit<Post, "date" | "likes" | "dislikes">
+  postData: Omit<Post, "date" | "likes" | "dislikes" | "docId">
 ) => {
   try {
-    const newPost: Post = {
+    // Create the new post object
+    const newPost = {
       ...postData,
       date: new Date().toISOString(),
       likes: 0,
@@ -15,12 +18,18 @@ export const addPost = async (
     };
 
     // Add post to Firestore and get the document reference
-    await addDoc(collection(db, "posts"), newPost);
+    const docRef = await addDoc(collection(db, "posts"), newPost);
 
-    // Return the document ID and the created post data
+    // Attach the document ID to the post data
+    const postWithDocId = {
+      ...newPost,
+      docId: docRef.id,
+    };
+
+    // Return the post data including docId
     return {
       success: true,
-      post: { ...newPost },
+      post: postWithDocId,
     };
   } catch (error) {
     console.error("Error adding post: ", error);
@@ -45,7 +54,7 @@ export const fetchPosts = async () => {
         text: data.text || "",
         status: data.status || "",
         bgColor: data.bgColor || "",
-        date: data.date || new Date().toISOString(),
+        date: getFormattedDate(),
         likes: data.likes || 0,
         dislikes: data.dislikes || 0,
       };

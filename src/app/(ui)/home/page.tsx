@@ -1,11 +1,12 @@
 "use client";
 
 import React, { useState, useCallback, useRef, useEffect } from "react";
-import { FaSmile, FaEllipsisV, FaThumbsUp, FaThumbsDown } from "react-icons/fa";
+import { FaSmile, FaEllipsisV } from "react-icons/fa";
 import EmojiPicker, { EmojiClickData } from "emoji-picker-react";
 import { toSentenceCase } from "@/app/utils/toSentenceCase";
 import Header from "@/app/components/header";
 import { auth } from "@/services/firebaseConfig";
+import { getFormattedDate } from "@/app/utils/formatDate";
 
 import { addPost, fetchPosts } from "@/app/api/post/data";
 
@@ -78,18 +79,6 @@ const Home: React.FC = () => {
     High: "#f8d7da",
   };
 
-  const getFormattedDate = () => {
-    const now = new Date();
-    return now.toLocaleString("en-US", {
-      weekday: "short",
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
-
   const handlePost = async () => {
     if (!text.trim()) return;
 
@@ -120,22 +109,6 @@ const Home: React.FC = () => {
     setPosts([newPost, ...posts]);
     setText("");
     setStatus("Neutral");
-  };
-
-  const handleLike = (id: number) => {
-    setPosts((prev) =>
-      prev.map((post) =>
-        post.id === id ? { ...post, likes: post.likes + 1 } : post
-      )
-    );
-  };
-
-  const handleDislike = (id: number) => {
-    setPosts((prev) =>
-      prev.map((post) =>
-        post.id === id ? { ...post, dislikes: post.dislikes + 1 } : post
-      )
-    );
   };
 
   const handleDelete = (id: number) => {
@@ -316,22 +289,6 @@ const Home: React.FC = () => {
 
                   <div className="flex gap-4 justify-between">
                     <p className="text-xs text-gray-500 mt-4">{post.date}</p>
-                    <div className="flex justify-end space-x-4 mt-2">
-                      <button
-                        className="flex items-center text-gray-500 hover:text-blue-600 transition"
-                        onClick={() => handleLike(post.id)}
-                      >
-                        <FaThumbsUp className="mr-1" />
-                        <span>{post.likes}</span>
-                      </button>
-                      <button
-                        className="flex items-center text-gray-500 hover:text-red-600 transition"
-                        onClick={() => handleDislike(post.id)}
-                      >
-                        <FaThumbsDown className="mr-1" />
-                        <span>{post.dislikes}</span>
-                      </button>
-                    </div>
                   </div>
                 </div>
               ))}

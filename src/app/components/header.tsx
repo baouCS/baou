@@ -34,10 +34,10 @@ const Header: React.FC = () => {
 
         {/* Dropdown Menu */}
         {isDropdownOpen && (
-          <div className="absolute w-fit right-0 mt-2 bg-white text-black rounded-md shadow-lg z-10">
+          <div className="absolute w-fit right-0 mt-2 bg-white text-black rounded-md shadow-lg z-10 hover:scale-105">
             <button
               onClick={handleLogout}
-              className="block w-fit text-gray-600 text-left px-4 py-2 hover:bg-gray-200"
+              className="block w-fit text-gray-600 text-left px-4 py-2 hover:text-red-500 "
             >
               Logout
             </button>
