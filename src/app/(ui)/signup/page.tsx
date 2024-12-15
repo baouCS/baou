@@ -4,6 +4,8 @@ import React, { useState } from "react";
 import Link from "next/link";
 import Swal from "sweetalert2";
 import { signupFormData } from "@/app/lib/definitions";
+import { signup, login } from "@/app/api/auth/data";
+import { useRouter } from "next/navigation";
 
 interface FormErrors {
   username: string;
@@ -26,7 +28,7 @@ const Signup: React.FC = () => {
     password: "",
     confirmPassword: "",
   });
-
+  const router = useRouter();
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [serverError, setServerError] = useState<string>("");
 
@@ -76,23 +78,7 @@ const Signup: React.FC = () => {
         setServerError("");
 
         // Call the signup API
-        const response = await fetch("/api/auth/signup", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            username: formData.username,
-            email: formData.email,
-            password: formData.password,
-          }),
-        });
-
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.message || "Signup failed.");
-        }
-
-        const data = await response.json();
-        console.log("Signup successful:", data);
+        await signup(formData);
 
         // Swal success notification
         await Swal.fire({
@@ -104,8 +90,12 @@ const Signup: React.FC = () => {
           timerProgressBar: true,
         });
 
+        const response = await login(formData.email, formData.password);
+
         // Redirect to the home
-        window.location.href = "/home"; // Replace with your app's home route
+        if (response) {
+        }
+        router.push("/home");
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } catch (error: any) {
         // Swal error notification

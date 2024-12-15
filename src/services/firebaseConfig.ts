@@ -32,19 +32,4 @@ const db = getFirestore(app);
 // Create Storage instance
 const storage = getStorage(app);
 
-function checkAuth() {
-  try {
-    const user = auth.currentUser;
-    if (user) {
-      console.log("Auth connected: Current user:", user.email);
-    } else {
-      console.log("Auth connected: No user is signed in.");
-    }
-  } catch (error) {
-    console.error("Error connecting to Firebase Auth:", error);
-  }
-}
-
-checkAuth();
-
-export { auth, db, storage, firebaseConfig };
+export { auth, db, storage };
