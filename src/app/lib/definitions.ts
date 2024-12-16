@@ -10,6 +10,12 @@ export interface SignUpResponse {
   error: boolean;
   status: number | string;
 }
+export interface Comment {
+  userId: string;
+  username: string;
+  text: string;
+  date: string;
+}
 
 export interface Post {
   docId: string;
@@ -20,4 +26,5 @@ export interface Post {
   date: string;
   likes: number;
   dislikes: number;
+  comments: Comment[];
 }

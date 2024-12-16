@@ -1,13 +1,20 @@
 "use client";
 
 import React, { useState, useCallback, useRef, useEffect } from "react";
-import { FaSmile, FaEllipsisV, FaThumbsUp, FaThumbsDown } from "react-icons/fa";
+import {
+  FaSmile,
+  FaEllipsisV,
+  FaThumbsUp,
+  FaThumbsDown,
+  FaCommentAlt,
+} from "react-icons/fa";
 import EmojiPicker, { EmojiClickData } from "emoji-picker-react";
 import { toSentenceCase } from "@/app/utils/toSentenceCase";
 import Header from "@/app/components/header";
 import { auth } from "@/services/firebaseConfig";
 import { getFormattedDate } from "@/app/utils/formatDate";
 import Swal from "sweetalert2";
+import { Post } from "@/app/lib/definitions";
 
 import {
   addPost,
@@ -17,18 +24,7 @@ import {
 } from "@/app/api/post/data";
 
 const Home: React.FC = () => {
-  const [posts, setPosts] = useState<
-    {
-      docId: string;
-      id: number;
-      text: string;
-      status: string;
-      bgColor: string;
-      date: string;
-      likes: number;
-      dislikes: number;
-    }[]
-  >([]);
+  const [posts, setPosts] = useState<Post[]>([]);
   const [text, setText] = useState("");
   const [status, setStatus] = useState("Neutral");
   const [editPostId, setEditPostId] = useState<number | null>(null);
@@ -37,6 +33,11 @@ const Home: React.FC = () => {
   const [isEmojiPickerOpen, setIsEmojiPickerOpen] = useState(false);
   const emojiPickerRef = useRef<HTMLDivElement>(null);
   const [loading, setLoading] = useState(true);
+  const [showCommentsId, setShowCommentsId] = useState<number | null>(null);
+  const [newComment, setNewComment] = useState("");
+  const [postComments, setPostComments] = useState<{ [key: number]: string[] }>(
+    {}
+  );
 
   const skeletonStyle = "animate-pulse bg-gray-300 rounded-md";
 
@@ -95,6 +96,7 @@ const Home: React.FC = () => {
       status,
       bgColor: statusColors[status],
       date: getFormattedDate(),
+      comments: [],
     };
 
     try {
@@ -156,6 +158,20 @@ const Home: React.FC = () => {
         post.id === id ? { ...post, dislikes: post.dislikes + 1 } : post
       )
     );
+  };
+
+  const handleAddComment = (postId: number) => {
+    if (newComment.trim()) {
+      setPostComments((prevComments) => ({
+        ...prevComments,
+        [postId]: [...(prevComments[postId] || []), newComment.trim()],
+      }));
+      setNewComment("");
+    }
+  };
+
+  const toggleComments = (id: number) => {
+    setShowCommentsId((prev) => (prev === id ? null : id));
   };
 
   const handleEdit = (id: number, docId: string) => {
@@ -247,7 +263,7 @@ const Home: React.FC = () => {
   }, []);
 
   return (
-    <div className="flex  flex-col items-center  h-screen bg-gray-100 overflow-hidden">
+    <div className="flex  flex-col items-center  h-screen bg-gray-100 overflow-clip">
       <Header />
 
       <div className="flex items-center w-full max-w-3xl flex-col lg:px-4 lg:bg-gray-200 h-full">
@@ -334,12 +350,12 @@ const Home: React.FC = () => {
               posts.map((post) => (
                 <div
                   key={post.id}
-                  className="mb-4 p-4 rounded-lg shadow-lg"
-                  style={{ backgroundColor: post.bgColor }}
+                  className="mb-4 p-4 rounded-lg shadow-lg bg-white"
+                  // style={{ backgroundColor: post.bgColor }}
                 >
                   <div className="flex justify-between gap-2">
                     <div className="w-full">
-                      <p className="text-gray-500 font-medium whitespace-pre-wrap p-2 bg-slate-100 shadow-inner bg-opacity-10 border-gray-500 border-b border-opacity-5 rounded-md py-4">
+                      <p className="text-gray-500 font-medium whitespace-pre-wrap p-4 bg-slate-200 shadow-inner bg-opacity-10 border-gray-500 border-b border-opacity-5 rounded-md py-4">
                         {toSentenceCase(post.text)}
                       </p>
                     </div>
@@ -371,24 +387,65 @@ const Home: React.FC = () => {
                     )}
                   </div>
 
-                  <div className="flex gap-4 justify-between">
-                    <p className="text-xs text-gray-500 mt-4">{post.date}</p>
-                    <div className="flex justify-end space-x-4 mt-2">
-                      <button
-                        className="flex items-center text-gray-500 hover:text-blue-600 transition"
-                        onClick={() => handleLike(post.id)}
-                      >
-                        <FaThumbsUp className="mr-1" />
-                        <span>{post.likes}</span>
-                      </button>
-                      <button
-                        className="flex items-center text-gray-500 hover:text-red-600 transition"
-                        onClick={() => handleDislike(post.id)}
-                      >
-                        <FaThumbsDown className="mr-1" />
-                        <span>{post.dislikes}</span>
-                      </button>
+                  <div className="post">
+                    <div className="flex gap-4 justify-between px-4">
+                      <p className="text-xs text-gray-500 mt-4">{post.date}</p>
+                      <div className="flex justify-end space-x-4 mt-2">
+                        <button
+                          className="flex items-center text-gray-500 hover:text-blue-600 transition"
+                          onClick={() => toggleComments(post.id)}
+                        >
+                          <FaCommentAlt className="mr-1" />
+                          <span>{postComments[post.id]?.length || 0}</span>
+                        </button>
+                        <button
+                          className="flex items-center text-gray-500 hover:text-blue-600 transition"
+                          onClick={() => handleLike(post.id)}
+                        >
+                          <FaThumbsUp className="mr-1" />
+                          <span>{post.likes}</span>
+                        </button>
+                        <button
+                          className="flex items-center text-gray-500 hover:text-red-600 transition"
+                          onClick={() => handleDislike(post.id)}
+                        >
+                          <FaThumbsDown className="mr-1" />
+                          <span>{post.dislikes}</span>
+                        </button>
+                      </div>
                     </div>
+
+                    {/* Comment Section */}
+                    {showCommentsId === post.id && (
+                      <div className=" mt-4 p-4 border-t border-gray-300">
+                        <div className="comments">
+                          <ul>
+                            {postComments[post.id]?.map((comment, index) => (
+                              <li
+                                key={index}
+                                className="text-sm text-gray-600 mb-2 p-2 bg-slate-100 rounded-md"
+                              >
+                                {comment}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                        <div className="add-comment">
+                          <textarea
+                            className="w-full p-2 border text-gray-500 rounded-lg mt-2"
+                            value={newComment}
+                            onChange={(e) => setNewComment(e.target.value)}
+                            placeholder="Input response message"
+                          />
+                          <button
+                            className="bg-blue-500 text-white py-1 px-4 rounded-lg mt-2"
+                            onClick={() => handleAddComment(post.id)}
+                          >
+                            Add Comment
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}
