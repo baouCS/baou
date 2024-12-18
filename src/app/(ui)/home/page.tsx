@@ -7,6 +7,7 @@ import {
   FaThumbsUp,
   FaThumbsDown,
   FaCommentAlt,
+  FaEdit,
 } from "react-icons/fa";
 import EmojiPicker, { EmojiClickData } from "emoji-picker-react";
 import { toSentenceCase } from "@/app/utils/toSentenceCase";
@@ -22,6 +23,7 @@ import {
   updatePost,
   deletePost,
 } from "@/app/api/post/data";
+import { FaDeleteLeft } from "react-icons/fa6";
 
 const Home: React.FC = () => {
   const [posts, setPosts] = useState<Post[]>([]);
@@ -81,9 +83,9 @@ const Home: React.FC = () => {
 
   const statusColors: Record<string, string> = {
     Neutral: "#ffffff",
-    Low: "#e2f7e2",
-    Medium: "#fff3cd",
-    High: "#f8d7da",
+    Low: "#22c55e",
+    Medium: "#eab308",
+    High: "#ef4444",
   };
 
   const handlePost = async () => {
@@ -301,11 +303,7 @@ const Home: React.FC = () => {
                 className="p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 text-gray-500"
               >
                 {Object.entries(statusColors).map(([key, color]) => (
-                  <option
-                    key={key}
-                    value={key}
-                    style={{ backgroundColor: color }}
-                  >
+                  <option key={key} value={key}>
                     {key}
                   </option>
                 ))}
@@ -351,7 +349,6 @@ const Home: React.FC = () => {
                 <div
                   key={post.id}
                   className="mb-4 p-4 rounded-lg shadow-lg bg-white"
-                  // style={{ backgroundColor: post.bgColor }}
                 >
                   <div className="flex justify-between gap-2">
                     <div className="w-full">
@@ -360,7 +357,26 @@ const Home: React.FC = () => {
                       </p>
                     </div>
                     {currentUser == "admin@gmail.com" && (
-                      <div className="relative">
+                      <div className="relative flex flex-col gap-2">
+                        {/* //status mark */}
+                        {post.bgColor !== "#ffffff" ? (
+                          <div
+                            className={`relative z-50 w-4 h-4 shadow-sm rounded-full`}
+                            style={{ backgroundColor: post.bgColor }}
+                            title={
+                              post.bgColor === "#22c55e"
+                                ? "Low Priority"
+                                : post.bgColor === "#eab308"
+                                ? "Medium Priority"
+                                : post.bgColor === "#ef4444"
+                                ? "High Priority"
+                                : ""
+                            }
+                          ></div>
+                        ) : (
+                          ""
+                        )}
+
                         <button
                           className="text-gray-400 hover:text-gray-500 focus:outline-none"
                           onClick={() => toggleDropdown(post.id)}
@@ -368,18 +384,20 @@ const Home: React.FC = () => {
                           <FaEllipsisV />
                         </button>
                         {activeDropdownId === post.id && (
-                          <div className="absolute right-0 mt-2 w-40 bg-white rounded-md shadow-lg z-10">
+                          <div className="absolute border right-6 w-fit bg-white rounded-md shadow-lg z-10">
                             <button
-                              className="block px-4 py-2 text-gray-700 hover:bg-gray-100"
+                              className="block px-4 py-2 text-gray-700 w-full hover:bg-gray-100"
                               onClick={() => handleEdit(post.id, post.docId)}
                             >
-                              Edit
+                              {/* Edit */}
+                              <FaEdit />
                             </button>
                             <button
                               className="block px-4 py-2 text-red-600 hover:bg-gray-100"
                               onClick={() => handleDelete(post.id, post.docId)}
                             >
-                              Delete
+                              {/* Delete */}
+                              <FaDeleteLeft />
                             </button>
                           </div>
                         )}
@@ -435,13 +453,13 @@ const Home: React.FC = () => {
                             className="w-full p-2 border text-gray-500 rounded-lg mt-2"
                             value={newComment}
                             onChange={(e) => setNewComment(e.target.value)}
-                            placeholder="Input response message"
+                            placeholder="Send a comment here..."
                           />
                           <button
                             className="bg-blue-500 text-white py-1 px-4 rounded-lg mt-2"
                             onClick={() => handleAddComment(post.id)}
                           >
-                            Add Comment
+                            Comment
                           </button>
                         </div>
                       </div>
