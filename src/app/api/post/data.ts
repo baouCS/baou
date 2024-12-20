@@ -13,7 +13,10 @@ import { getFormattedDate } from "@/app/utils/formatDate";
 // Function to add a new post to Firebase Firestore
 
 export const addPost = async (
-  postData: Omit<Post, "date" | "likes" | "dislikes" | "docId" | "comments">
+  postData: Omit<
+    Post,
+    "date" | "likes" | "dislikes" | "docId" | "comments" | "image"
+  >
 ) => {
   try {
     // Create the new post object
@@ -22,7 +25,8 @@ export const addPost = async (
       date: new Date().toISOString(),
       likes: 0,
       dislikes: 0,
-      comments: "",
+      comments: [],
+      image: "",
     };
 
     // Add post to Firestore and get the document reference
@@ -47,7 +51,6 @@ export const addPost = async (
     };
   }
 };
-// Fetch posts from Firestore
 
 export const fetchPosts = async () => {
   try {

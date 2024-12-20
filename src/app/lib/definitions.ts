@@ -27,4 +27,5 @@ export interface Post {
   likes: number;
   dislikes: number;
   comments: Comment[];
+  image?: File | null;
 }

@@ -8,6 +8,7 @@ import {
   FaThumbsDown,
   FaCommentAlt,
   FaEdit,
+  FaImage,
 } from "react-icons/fa";
 import EmojiPicker, { EmojiClickData } from "emoji-picker-react";
 import { toSentenceCase } from "@/app/utils/toSentenceCase";
@@ -16,6 +17,7 @@ import { auth } from "@/services/firebaseConfig";
 import { getFormattedDate } from "@/app/utils/formatDate";
 import Swal from "sweetalert2";
 import { Post } from "@/app/lib/definitions";
+import Image from "next/image";
 
 import {
   addPost,
@@ -27,6 +29,7 @@ import { FaDeleteLeft } from "react-icons/fa6";
 
 const Home: React.FC = () => {
   const [posts, setPosts] = useState<Post[]>([]);
+  const [image, setImage] = useState<File | null>(null);
   const [text, setText] = useState("");
   const [status, setStatus] = useState("Neutral");
   const [editPostId, setEditPostId] = useState<number | null>(null);
@@ -99,6 +102,7 @@ const Home: React.FC = () => {
       bgColor: statusColors[status],
       date: getFormattedDate(),
       comments: [],
+      image: image ? image : null,
     };
 
     try {
@@ -106,6 +110,7 @@ const Home: React.FC = () => {
       const result = await addPost(newPost);
 
       if (result.success && result.post) {
+        setImage(null);
         // Include the docId returned from the API into the post object
         const postWithDocId = {
           ...newPost,
@@ -114,8 +119,6 @@ const Home: React.FC = () => {
           dislikes: result.post.dislikes ?? 0,
         };
 
-        // Update the state with the new post
-        setPosts([postWithDocId, ...posts]);
         // Update the state with the new post
         setPosts([postWithDocId, ...posts]);
       } else {
@@ -129,6 +132,56 @@ const Home: React.FC = () => {
     setText("");
     setStatus("Neutral");
   };
+
+  // const handlePost = async () => {
+  //   if (!text.trim()) return;
+
+  //   let imageUrl = "";
+
+  //   // Upload image if available
+  //   if (image) {
+  //     try {
+  //       const filePath = `images/posts/${image.name || `post-${Date.now()}`}`;
+  //       imageUrl = await uploadImageToStorage(image, filePath);
+  //     } catch (error) {
+  //       console.error("Image upload failed:", error);
+  //       return; // Stop if upload fails
+  //     }
+  //   }
+
+  //   // Prepare the new post object
+  //   const newPost: Omit<Post, "docId"> = {
+  //     id: posts.length + 1,
+  //     text: text.replace(/(\r?\n\s*\n){3,}/g, "\n\n"),
+  //     status,
+  //     bgColor: statusColors[status],
+  //     date: getFormattedDate(),
+  //     comments: [],
+  //     image: imageUrl,
+  //     likes: 0,
+  //     dislikes: 0,
+  //   };
+
+  //   try {
+  //     // Call addPost API function
+  //     const result = await addPost(newPost);
+
+  //     if (result.success && result.post) {
+  //       setImage(null);
+
+  //       // Update the state with the new post
+  //       setPosts([result.post, ...posts]);
+  //     } else {
+  //       console.error("Failed to add post:", result.message);
+  //     }
+  //   } catch (error) {
+  //     console.error("Error adding post:", error);
+  //   }
+
+  //   // Reset the input fields
+  //   setText("");
+  //   setStatus("Neutral");
+  // };
 
   const handleDelete = async (id: number, docId: string) => {
     try {
@@ -249,6 +302,14 @@ const Home: React.FC = () => {
     setActiveDropdownId((prev) => (prev === id ? null : id));
   };
 
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setImage(e.target.files[0]);
+      // Optional: You can preview the image here or upload it immediately
+      console.log("Selected image:", e.target.files[0]);
+    }
+  };
+
   useEffect(() => {
     if (isEmojiPickerOpen) {
       document.addEventListener("click", handleOutsideClick);
@@ -270,7 +331,7 @@ const Home: React.FC = () => {
 
       <div className="flex items-center w-full max-w-3xl flex-col lg:px-4 lg:bg-gray-200 h-full">
         {currentUser && currentUser.toLowerCase() == "admin@gmail.com" ? (
-          <div className="relative  rounded-b-lg w-full flex flex-col items-center p-4 bg-white shadow-md">
+          <div className="relative rounded-b-lg w-full flex flex-col h-fit items-center p-4 bg-white shadow-md">
             {/* Emoji Picker */}
             {isEmojiPickerOpen && (
               <div
@@ -281,12 +342,24 @@ const Home: React.FC = () => {
               </div>
             )}
 
-            <textarea
-              className="w-full text-gray-500  h-24 p-2 border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-400"
-              value={text}
-              onChange={(e) => setText(e.target.value)}
-              placeholder="What's on your mind?"
-            />
+            <div className="flex w-full flex-col gap-2">
+              {image && (
+                <Image
+                  src={URL.createObjectURL(image)}
+                  alt="Uploaded Preview"
+                  className="w-full  rounded-md"
+                  width={100}
+                  height={100}
+                />
+              )}
+
+              <textarea
+                className="w-full text-gray-500  h-24 p-2 border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-400"
+                value={text}
+                onChange={(e) => setText(e.target.value)}
+                placeholder="What's on your mind?"
+              />
+            </div>
             <div className="flex items-center mt-2 space-x-4">
               <div className="">
                 <button
@@ -295,6 +368,24 @@ const Home: React.FC = () => {
                 >
                   <FaSmile />
                 </button>
+              </div>
+
+              <div>
+                <button
+                  className="bg-blue-500 p-2 rounded-lg hover:bg-blue-600 transition"
+                  onClick={() =>
+                    document.getElementById("image-input")?.click()
+                  }
+                >
+                  <FaImage />
+                </button>
+                <input
+                  id="image-input"
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleImageChange}
+                />
               </div>
 
               <select
@@ -351,8 +442,17 @@ const Home: React.FC = () => {
                   className="mb-4 p-4 rounded-lg shadow-lg bg-white"
                 >
                   <div className="flex justify-between gap-2">
-                    <div className="w-full">
-                      <p className="text-gray-500 font-medium whitespace-pre-wrap p-4 bg-slate-200 shadow-inner bg-opacity-10 border-gray-500 border-b border-opacity-5 rounded-md py-4">
+                    <div className="w-full flex flex-col gap-2">
+                      {post.image && (
+                        <Image
+                          src={URL.createObjectURL(post.image)}
+                          alt="Uploaded Preview"
+                          className="w-full rounded-md"
+                          width={100}
+                          height={100}
+                        />
+                      )}
+                      <p className="text-gray-500 font-medium whitespace-pre-wrap p-4 bg-slate-50 shadow-inner bg-opacity-10 border-gray-300 border-b border-opacity-20 rounded-md py-4">
                         {toSentenceCase(post.text)}
                       </p>
                     </div>
