@@ -133,56 +133,6 @@ const Home: React.FC = () => {
     setStatus("Neutral");
   };
 
-  // const handlePost = async () => {
-  //   if (!text.trim()) return;
-
-  //   let imageUrl = "";
-
-  //   // Upload image if available
-  //   if (image) {
-  //     try {
-  //       const filePath = `images/posts/${image.name || `post-${Date.now()}`}`;
-  //       imageUrl = await uploadImageToStorage(image, filePath);
-  //     } catch (error) {
-  //       console.error("Image upload failed:", error);
-  //       return; // Stop if upload fails
-  //     }
-  //   }
-
-  //   // Prepare the new post object
-  //   const newPost: Omit<Post, "docId"> = {
-  //     id: posts.length + 1,
-  //     text: text.replace(/(\r?\n\s*\n){3,}/g, "\n\n"),
-  //     status,
-  //     bgColor: statusColors[status],
-  //     date: getFormattedDate(),
-  //     comments: [],
-  //     image: imageUrl,
-  //     likes: 0,
-  //     dislikes: 0,
-  //   };
-
-  //   try {
-  //     // Call addPost API function
-  //     const result = await addPost(newPost);
-
-  //     if (result.success && result.post) {
-  //       setImage(null);
-
-  //       // Update the state with the new post
-  //       setPosts([result.post, ...posts]);
-  //     } else {
-  //       console.error("Failed to add post:", result.message);
-  //     }
-  //   } catch (error) {
-  //     console.error("Error adding post:", error);
-  //   }
-
-  //   // Reset the input fields
-  //   setText("");
-  //   setStatus("Neutral");
-  // };
-
   const handleDelete = async (id: number, docId: string) => {
     try {
       // Call the delete API
@@ -229,7 +179,11 @@ const Home: React.FC = () => {
     setShowCommentsId((prev) => (prev === id ? null : id));
   };
 
-  const handleEdit = (id: number, docId: string) => {
+  const handleEdit = (
+    id: number,
+    docId: string,
+    image: File | null | undefined
+  ) => {
     const postToEdit = posts.find((post) => post.id === id);
     if (postToEdit) {
       setDocId(docId);
@@ -237,14 +191,17 @@ const Home: React.FC = () => {
       setText(postToEdit.text);
       setStatus(postToEdit.status);
     }
+    if (image) {
+      setImage(image);
+    }
     setActiveDropdownId(null); // Close dropdown
   };
 
   const handleUpdate = async () => {
     try {
-      // Build the updated post data
+      // Build the updated post data (excluding the image)
       const updatedData = {
-        text: text.replace(/(\r?\n\s*\n){3,}/g, "\n\n"),
+        text: text.replace(/(\r?\n\s*\n){3,}/g, "\n\n"), // Normalize excessive line breaks
         status,
         bgColor: statusColors[status],
       };
@@ -259,7 +216,13 @@ const Home: React.FC = () => {
         // Update the local state only if the Firestore update is successful
         setPosts((prev) =>
           prev.map((post) =>
-            post.id === editPostId ? { ...post, ...updatedData } : post
+            post.id === editPostId
+              ? {
+                  ...post,
+                  ...updatedData, // Update text, status, and bgColor
+                  image: image || post.image, // Keep the existing image or update it
+                }
+              : post
           )
         );
 
@@ -267,6 +230,7 @@ const Home: React.FC = () => {
         setEditPostId(null);
         setText("");
         setStatus("Low");
+        setImage(null); // Clear the image input after updating
 
         // Show success notification
         Swal.fire({
@@ -456,53 +420,59 @@ const Home: React.FC = () => {
                         {toSentenceCase(post.text)}
                       </p>
                     </div>
-                    {currentUser == "admin@gmail.com" && (
-                      <div className="relative flex flex-col gap-2">
-                        {/* //status mark */}
-                        {post.bgColor !== "#ffffff" ? (
-                          <div
-                            className={`relative z-50 w-4 h-4 shadow-sm rounded-full`}
-                            style={{ backgroundColor: post.bgColor }}
-                            title={
-                              post.bgColor === "#22c55e"
-                                ? "Low Priority"
-                                : post.bgColor === "#eab308"
-                                ? "Medium Priority"
-                                : post.bgColor === "#ef4444"
-                                ? "High Priority"
-                                : ""
-                            }
-                          ></div>
-                        ) : (
-                          ""
-                        )}
+                    <div className="relative flex flex-col gap-2">
+                      {/* //status mark */}
+                      {post.bgColor !== "#ffffff" ? (
+                        <div
+                          className={`relative z-50 w-4 h-4 shadow-sm rounded-full`}
+                          style={{ backgroundColor: post.bgColor }}
+                          title={
+                            post.bgColor === "#22c55e"
+                              ? "Low Priority"
+                              : post.bgColor === "#eab308"
+                              ? "Medium Priority"
+                              : post.bgColor === "#ef4444"
+                              ? "High Priority"
+                              : ""
+                          }
+                        ></div>
+                      ) : (
+                        ""
+                      )}
 
-                        <button
-                          className="text-gray-400 hover:text-gray-500 focus:outline-none"
-                          onClick={() => toggleDropdown(post.id)}
-                        >
-                          <FaEllipsisV />
-                        </button>
-                        {activeDropdownId === post.id && (
-                          <div className="absolute border right-6 w-fit bg-white rounded-md shadow-lg z-10">
-                            <button
-                              className="block px-4 py-2 text-gray-700 w-full hover:bg-gray-100"
-                              onClick={() => handleEdit(post.id, post.docId)}
-                            >
-                              {/* Edit */}
-                              <FaEdit />
-                            </button>
-                            <button
-                              className="block px-4 py-2 text-red-600 hover:bg-gray-100"
-                              onClick={() => handleDelete(post.id, post.docId)}
-                            >
-                              {/* Delete */}
-                              <FaDeleteLeft />
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                    )}
+                      {currentUser == "admin@gmail.com" && (
+                        <>
+                          <button
+                            className="text-gray-400 hover:text-gray-500 focus:outline-none"
+                            onClick={() => toggleDropdown(post.id)}
+                          >
+                            <FaEllipsisV />
+                          </button>
+                          {activeDropdownId === post.id && (
+                            <div className="absolute border right-6 w-fit bg-white rounded-md shadow-lg z-10">
+                              <button
+                                className="block px-4 py-2 text-gray-700 w-full hover:bg-gray-100"
+                                onClick={() =>
+                                  handleEdit(post.id, post.docId, post.image)
+                                }
+                              >
+                                {/* Edit */}
+                                <FaEdit />
+                              </button>
+                              <button
+                                className="block px-4 py-2 text-red-600 hover:bg-gray-100"
+                                onClick={() =>
+                                  handleDelete(post.id, post.docId)
+                                }
+                              >
+                                {/* Delete */}
+                                <FaDeleteLeft />
+                              </button>
+                            </div>
+                          )}
+                        </>
+                      )}
+                    </div>
                   </div>
 
                   <div className="post">

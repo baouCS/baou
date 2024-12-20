@@ -11,22 +11,23 @@ import { Post } from "@/app/lib/definitions";
 import { getFormattedDate } from "@/app/utils/formatDate";
 
 // Function to add a new post to Firebase Firestore
-
 export const addPost = async (
-  postData: Omit<
-    Post,
-    "date" | "likes" | "dislikes" | "docId" | "comments" | "image"
-  >
+  postData: Omit<Post, "date" | "likes" | "dislikes" | "docId" | "comments">
 ) => {
   try {
+    const { image, ...restData } = postData;
+
+    // Construct the local image URL
+    const imageUrl = image ? `/uploads/${image}` : null;
+
     // Create the new post object
     const newPost = {
-      ...postData,
+      ...restData,
+      imageUrl,
       date: new Date().toISOString(),
       likes: 0,
       dislikes: 0,
       comments: [],
-      image: "",
     };
 
     // Add post to Firestore and get the document reference
@@ -38,7 +39,6 @@ export const addPost = async (
       docId: docRef.id,
     };
 
-    // Return the post data including docId
     return {
       success: true,
       post: postWithDocId,
@@ -51,6 +51,46 @@ export const addPost = async (
     };
   }
 };
+
+// export const addPost = async (
+//   postData: Omit<
+//     Post,
+//     "date" | "likes" | "dislikes" | "docId" | "comments" | "image"
+//   >
+// ) => {
+//   try {
+//     // Create the new post object
+//     const newPost = {
+//       ...postData,
+//       date: new Date().toISOString(),
+//       likes: 0,
+//       dislikes: 0,
+//       comments: [],
+//       image: "",
+//     };
+
+//     // Add post to Firestore and get the document reference
+//     const docRef = await addDoc(collection(db, "posts"), newPost);
+
+//     // Attach the document ID to the post data
+//     const postWithDocId = {
+//       ...newPost,
+//       docId: docRef.id,
+//     };
+
+//     // Return the post data including docId
+//     return {
+//       success: true,
+//       post: postWithDocId,
+//     };
+//   } catch (error) {
+//     console.error("Error adding post: ", error);
+//     return {
+//       success: false,
+//       message: error || "An error occurred",
+//     };
+//   }
+// };
 
 export const fetchPosts = async () => {
   try {
