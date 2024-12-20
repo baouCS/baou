@@ -14,11 +14,11 @@ import EmojiPicker, { EmojiClickData } from "emoji-picker-react";
 import { toSentenceCase } from "@/app/utils/toSentenceCase";
 import Header from "@/app/components/header";
 import { auth } from "@/services/firebaseConfig";
-import { getFormattedDate } from "@/app/utils/formatDate";
 import Swal from "sweetalert2";
 import { Post } from "@/app/lib/definitions";
 import Image from "next/image";
 import { getTimeDifference } from "@/app/utils/formatToTime";
+import { updatePostReactions } from "@/app/api/post/data";
 
 import {
   addPost,
@@ -49,6 +49,7 @@ const Home: React.FC = () => {
   const skeletonStyle = "animate-pulse bg-gray-300 rounded-md";
 
   const currentUser = auth.currentUser?.email;
+  const userId = auth.currentUser?.uid;
 
   const fetchData = async () => {
     try {
@@ -161,20 +162,28 @@ const Home: React.FC = () => {
     }
   };
 
-  const handleLike = (id: number) => {
-    setPosts((prev) =>
-      prev.map((post) =>
-        post.id === id ? { ...post, likes: post.likes + 1 } : post
-      )
-    );
+  const handleLike = async (id: number, userId: string) => {
+    const post = posts.find((post) => post.id === id);
+    if (!post) return;
+
+    try {
+      const updatedPost = await updatePostReactions(post, userId, "like");
+      setPosts((prev) => prev.map((p) => (p.id === id ? updatedPost : p)));
+    } catch (error) {
+      console.error("Failed to like post:", error);
+    }
   };
 
-  const handleDislike = (id: number) => {
-    setPosts((prev) =>
-      prev.map((post) =>
-        post.id === id ? { ...post, dislikes: post.dislikes + 1 } : post
-      )
-    );
+  const handleDislike = async (id: number, userId: string) => {
+    const post = posts.find((post) => post.id === id);
+    if (!post) return;
+
+    try {
+      const updatedPost = await updatePostReactions(post, userId, "dislike");
+      setPosts((prev) => prev.map((p) => (p.id === id ? updatedPost : p)));
+    } catch (error) {
+      console.error("Failed to dislike post:", error);
+    }
   };
 
   const handleAddComment = async (postId: number, docId: string) => {
@@ -527,14 +536,26 @@ const Home: React.FC = () => {
                         </button>
                         <button
                           className="flex items-center text-gray-500 hover:text-blue-600 transition"
-                          onClick={() => handleLike(post.id)}
+                          onClick={() => {
+                            if (!userId) {
+                              alert("You must be logged in to react.");
+                              return;
+                            }
+                            handleLike(post.id, userId);
+                          }}
                         >
                           <FaThumbsUp className="mr-1" />
                           <span>{post.likes}</span>
                         </button>
                         <button
                           className="flex items-center text-gray-500 hover:text-red-600 transition"
-                          onClick={() => handleDislike(post.id)}
+                          onClick={() => {
+                            if (!userId) {
+                              alert("You must be logged in to react.");
+                              return;
+                            }
+                            handleDislike(post.id, userId);
+                          }}
                         >
                           <FaThumbsDown className="mr-1" />
                           <span>{post.dislikes}</span>
