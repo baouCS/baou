@@ -112,11 +112,8 @@ const Signup: React.FC = () => {
     }
   };
   return (
-    <main className="flex justify-center items-center h-screen bg-gray-100">
-      <div className="w-full max-w-md bg-white p-8 rounded-xl shadow-2xl border-4 border-blue-200 animate-border-rgb">
-        <Link href="/">
-          <button className="text-gray-600 pb-2 font-semibold">Back</button>
-        </Link>
+    <main className="flex justify-center items-center h-screen  bg-gray-100">
+      <div className="w-full max-w-md bg-white m-4 p-8 rounded-xl shadow-2xl ">
         <h1 className="mb-6 text-2xl font-bold text-gray-800 text-center">
           REGISTER
         </h1>
@@ -175,6 +172,13 @@ const Signup: React.FC = () => {
             {isLoading ? "Signing up..." : "Sign up"}
           </button>
         </form>
+
+        <div className="flex justify-center gap-1 mt-4 text-sm">
+          <span className="text-gray-400">Already have an account?</span>
+          <Link href="/">
+            <button className="text-gray-500 font-semibold">Login Now</button>
+          </Link>
+        </div>
       </div>
     </main>
   );
