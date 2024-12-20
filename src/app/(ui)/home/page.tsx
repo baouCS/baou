@@ -121,6 +121,15 @@ const Home: React.FC = () => {
 
         // Update the state with the new post
         setPosts([postWithDocId, ...posts]);
+
+        // Show success notification
+        Swal.fire({
+          icon: "success",
+          title: "Post Created",
+          text: "The post has been created successfully!",
+          timer: 1500,
+          showConfirmButton: false,
+        });
       } else {
         console.error("Failed to add post:", result.message);
       }
@@ -270,7 +279,6 @@ const Home: React.FC = () => {
     if (e.target.files && e.target.files[0]) {
       setImage(e.target.files[0]);
       // Optional: You can preview the image here or upload it immediately
-      console.log("Selected image:", e.target.files[0]);
     }
   };
 
@@ -324,47 +332,49 @@ const Home: React.FC = () => {
                 placeholder="What's on your mind?"
               />
             </div>
-            <div className="flex items-center mt-2 space-x-4">
-              <div className="">
-                <button
-                  className="bg-blue-500 p-2 rounded-lg hover:bg-blue-600 transition"
-                  onClick={() => setIsEmojiPickerOpen((prev) => !prev)}
-                >
-                  <FaSmile />
-                </button>
-              </div>
+            <div className="flex w-full mt-4 justify-between">
+              <div className="flex gap-2">
+                <div className="">
+                  <button
+                    className="bg-yellow-400 p-2 rounded-full hover:bg-yellow-600 transition"
+                    onClick={() => setIsEmojiPickerOpen((prev) => !prev)}
+                  >
+                    <FaSmile color="white" />
+                  </button>
+                </div>
 
-              <div>
-                <button
-                  className="bg-blue-500 p-2 rounded-lg hover:bg-blue-600 transition"
-                  onClick={() =>
-                    document.getElementById("image-input")?.click()
-                  }
-                >
-                  <FaImage />
-                </button>
-                <input
-                  id="image-input"
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={handleImageChange}
-                />
-              </div>
+                <div>
+                  <button
+                    className="bg-green-500 p-2 rounded-full hover:bg-green-600 transition"
+                    onClick={() =>
+                      document.getElementById("image-input")?.click()
+                    }
+                  >
+                    <FaImage color="white" />
+                  </button>
+                  <input
+                    id="image-input"
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleImageChange}
+                  />
+                </div>
 
-              <select
-                value={status}
-                onChange={(e) => setStatus(e.target.value)}
-                className="p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 text-gray-500"
-              >
-                {Object.entries(statusColors).map(([key, color]) => (
-                  <option key={key} value={key}>
-                    {key}
-                  </option>
-                ))}
-              </select>
+                <select
+                  value={status}
+                  onChange={(e) => setStatus(e.target.value)}
+                  className="p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 text-gray-500"
+                >
+                  {Object.entries(statusColors).map(([key, color]) => (
+                    <option key={key} value={key}>
+                      {key}
+                    </option>
+                  ))}
+                </select>
+              </div>
               <button
-                className="bg-blue-500 text-white py-1 px-4 rounded-lg hover:bg-blue-600 transition"
+                className="bg-blue-500 text-white py-1 px-4 rounded-full hover:bg-blue-600 transition"
                 onClick={editPostId === null ? handlePost : handleUpdate}
               >
                 {editPostId === null ? "Post" : "Update"}
