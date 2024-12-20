@@ -18,6 +18,7 @@ import { getFormattedDate } from "@/app/utils/formatDate";
 import Swal from "sweetalert2";
 import { Post } from "@/app/lib/definitions";
 import Image from "next/image";
+import { getTimeDifference } from "@/app/utils/formatToTime";
 
 import {
   addPost,
@@ -102,7 +103,7 @@ const Home: React.FC = () => {
       text: text.replace(/(\r?\n\s*\n){3,}/g, "\n\n"),
       status,
       bgColor: statusColors[status],
-      date: getFormattedDate(),
+      date: Date(),
       comments: [],
       image: image ? image : null,
     };
@@ -182,7 +183,7 @@ const Home: React.FC = () => {
         // Call API to persist the comment
         const commentData = {
           text: newComment.trim(),
-          author: "Current User", // Replace with actual user's name or ID
+          author: currentUser || "user",
         };
 
         const response = await createComment(docId, commentData);
@@ -358,7 +359,7 @@ const Home: React.FC = () => {
                 placeholder="What's on your mind?"
               />
             </div>
-            <div className="flex w-full mt-4 justify-between">
+            <div className="flex w-full mt-4  justify-between">
               <div className="flex gap-2">
                 <div className="">
                   <button
@@ -442,7 +443,7 @@ const Home: React.FC = () => {
                   className="mb-4 p-4 rounded-lg shadow-lg bg-white"
                 >
                   <div className="flex justify-between gap-2">
-                    <div className="w-full flex flex-col gap-2">
+                    <div className="w-full flex flex-col  gap-2">
                       {post.image && (
                         <Image
                           src={URL.createObjectURL(post.image)}
@@ -511,9 +512,11 @@ const Home: React.FC = () => {
                     </div>
                   </div>
                   {/* post section */}
-                  <div className="post">
-                    <div className="flex gap-4 justify-between px-4">
-                      <p className="text-xs text-gray-500 mt-4">{post.date}</p>
+                  <div className="post ">
+                    <div className="flex  gap-4  justify-between px-4">
+                      <p className="text-xs text-gray-500 mt-4">
+                        {getTimeDifference(post.date)}
+                      </p>
                       <div className="flex justify-end space-x-4 mt-2">
                         <button
                           className="flex items-center text-gray-500 hover:text-blue-600 transition"
@@ -541,30 +544,77 @@ const Home: React.FC = () => {
 
                     {/* Comment Section */}
                     {showCommentsId === post.id && (
-                      <div className=" mt-4 p-4 border-t border-gray-300">
-                        <div className="comments">
-                          <ul>
+                      <div className="mt-4 p-4  ">
+                        <div className="comments max-h-[300px] overflow-y-auto">
+                          <ul className="gap-4">
                             {post.comments &&
-                              post.comments.map((comment, index) => (
+                              post.comments
+                                .sort(
+                                  (a, b) =>
+                                    new Date(b.date).getTime() -
+                                    new Date(a.date).getTime()
+                                ) // Sort by latest date
+                                .map((comment, index) => (
+                                  <li
+                                    key={index}
+                                    className={`text-sm text-gray-500 p-4 ${
+                                      index !== post.comments.length - 1
+                                        ? "border-b"
+                                        : ""
+                                    }`}
+                                  >
+                                    <p className="flex justify-between">
+                                      <span className="font-bold mb-2">
+                                        {comment.author.split("@gmail.com")}
+                                      </span>
+                                      <span className="text-xs text-gray-400">
+                                        {getTimeDifference(comment.date)}
+                                      </span>
+                                    </p>
+                                    <p>{comment.text}</p>
+                                  </li>
+                                ))}
+                          </ul>
+
+                          <ul className="gap-4">
+                            {postComments[post.id]
+                              ?.sort(
+                                (a, b) =>
+                                  new Date(b.date).getTime() -
+                                  new Date(a.date).getTime()
+                              ) // Sort by latest date
+                              .map((comment, index) => (
                                 <li
                                   key={index}
-                                  className="text-sm text-gray-500 mb-2 p-2 bg-slate-50 rounded-md"
+                                  className={`text-sm text-gray-500 p-4 ${
+                                    index !== post.comments.length - 1
+                                      ? "border-b"
+                                      : ""
+                                  }`}
                                 >
-                                  <p className="font-bold">{comment.author}</p>
-                                  <p>{comment.text}</p>
+                                  <p className="flex justify-between">
+                                    <span className="font-bold mb-2">
+                                      {currentUser?.split("@gmail.com")}
+                                    </span>
+                                  </p>
+                                  <p> {comment}</p>
                                 </li>
                               ))}
                           </ul>
-                          <ul>
+
+                          {/* <ul className=" gap-4">
                             {postComments[post.id]?.map((comment, index) => (
                               <li
                                 key={index}
-                                className="text-sm text-gray-500 mb-2 p-2 bg-slate-50 rounded-md"
+                                className="text-sm text-gray-500 mb-2 p-4"
                               >
-                                {comment}
+                                <p className="font-bold mb-2">
+                                  {currentUser?.split("@gmail.com")}
+                                </p>
+                                <p> {comment}</p>
                               </li>
                             ))}
-                          </ul>
+                          </ul> */}
                         </div>
                         <div className="add-comment">
                           <textarea
