@@ -11,8 +11,7 @@ export interface SignUpResponse {
   status: number | string;
 }
 export interface Comment {
-  userId: string;
-  username: string;
+  author: string;
   text: string;
   date: string;
 }

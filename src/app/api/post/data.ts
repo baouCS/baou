@@ -6,6 +6,7 @@ import {
   updateDoc,
   doc,
   deleteDoc,
+  arrayUnion,
 } from "firebase/firestore";
 import { Post } from "@/app/lib/definitions";
 import { getFormattedDate } from "@/app/utils/formatDate";
@@ -51,46 +52,6 @@ export const addPost = async (
     };
   }
 };
-
-// export const addPost = async (
-//   postData: Omit<
-//     Post,
-//     "date" | "likes" | "dislikes" | "docId" | "comments" | "image"
-//   >
-// ) => {
-//   try {
-//     // Create the new post object
-//     const newPost = {
-//       ...postData,
-//       date: new Date().toISOString(),
-//       likes: 0,
-//       dislikes: 0,
-//       comments: [],
-//       image: "",
-//     };
-
-//     // Add post to Firestore and get the document reference
-//     const docRef = await addDoc(collection(db, "posts"), newPost);
-
-//     // Attach the document ID to the post data
-//     const postWithDocId = {
-//       ...newPost,
-//       docId: docRef.id,
-//     };
-
-//     // Return the post data including docId
-//     return {
-//       success: true,
-//       post: postWithDocId,
-//     };
-//   } catch (error) {
-//     console.error("Error adding post: ", error);
-//     return {
-//       success: false,
-//       message: error || "An error occurred",
-//     };
-//   }
-// };
 
 export const fetchPosts = async () => {
   try {
@@ -167,6 +128,40 @@ export const deletePost = async (docId: string) => {
     return {
       success: false,
       message: error || "An error occurred",
+    };
+  }
+};
+
+export const createComment = async (
+  postId: string, // The Firestore document ID of the post
+  commentData: {
+    text: string;
+    author: string;
+  }
+) => {
+  try {
+    // Construct the comment object
+    const newComment = {
+      ...commentData,
+      date: new Date().toISOString(),
+    };
+
+    // Update the comments array in the specified post document
+    const postRef = doc(db, "posts", postId);
+    await updateDoc(postRef, {
+      comments: arrayUnion(newComment),
+    });
+
+    return {
+      success: true,
+      message: "Comment added successfully",
+      comment: newComment,
+    };
+  } catch (error) {
+    console.error("Error adding comment: ", error);
+    return {
+      success: false,
+      message: error || "An error occurred while adding the comment",
     };
   }
 };

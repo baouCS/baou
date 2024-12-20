@@ -24,6 +24,7 @@ import {
   fetchPosts,
   updatePost,
   deletePost,
+  createComment,
 } from "@/app/api/post/data";
 import { FaDeleteLeft } from "react-icons/fa6";
 
@@ -53,6 +54,7 @@ const Home: React.FC = () => {
       const result = await fetchPosts();
       if (result.posts) {
         // Add the new posts to the state only if they don't already exist
+
         setPosts((prevPosts) => {
           const newPosts = result.posts.filter(
             (newPost) =>
@@ -174,17 +176,37 @@ const Home: React.FC = () => {
     );
   };
 
-  const handleAddComment = (postId: number) => {
+  const handleAddComment = async (postId: number, docId: string) => {
     if (newComment.trim()) {
-      setPostComments((prevComments) => ({
-        ...prevComments,
-        [postId]: [...(prevComments[postId] || []), newComment.trim()],
-      }));
-      setNewComment("");
+      try {
+        // Call API to persist the comment
+        const commentData = {
+          text: newComment.trim(),
+          author: "Current User", // Replace with actual user's name or ID
+        };
+
+        const response = await createComment(docId, commentData);
+
+        if (response.success && response.comment) {
+          // Update UI state after successful API call
+          setPostComments((prevComments) => ({
+            ...prevComments,
+            [postId]: [
+              ...(prevComments[postId] || []),
+              response.comment.text, // Add the new comment text to the UI
+            ],
+          }));
+          setNewComment("");
+        } else {
+          console.error("Failed to add comment:", response.message);
+        }
+      } catch (error) {
+        console.error("Error adding comment:", error);
+      }
     }
   };
 
-  const toggleComments = (id: number) => {
+  const toggleComments = (id: number, docId: string) => {
     setShowCommentsId((prev) => (prev === id ? null : id));
   };
 
@@ -296,6 +318,10 @@ const Home: React.FC = () => {
   useEffect(() => {
     fetchData();
   }, []);
+
+  useEffect(() => {
+    console.log(posts);
+  }, [posts]);
 
   return (
     <div className="flex  flex-col items-center  h-screen bg-gray-100 overflow-clip">
@@ -484,17 +510,17 @@ const Home: React.FC = () => {
                       )}
                     </div>
                   </div>
-
+                  {/* post section */}
                   <div className="post">
                     <div className="flex gap-4 justify-between px-4">
                       <p className="text-xs text-gray-500 mt-4">{post.date}</p>
                       <div className="flex justify-end space-x-4 mt-2">
                         <button
                           className="flex items-center text-gray-500 hover:text-blue-600 transition"
-                          onClick={() => toggleComments(post.id)}
+                          onClick={() => toggleComments(post.id, post.docId)}
                         >
                           <FaCommentAlt className="mr-1" />
-                          <span>{postComments[post.id]?.length || 0}</span>
+                          <span>{post.comments?.length || 0}</span>
                         </button>
                         <button
                           className="flex items-center text-gray-500 hover:text-blue-600 transition"
@@ -518,10 +544,22 @@ const Home: React.FC = () => {
                       <div className=" mt-4 p-4 border-t border-gray-300">
                         <div className="comments">
                           <ul>
+                            {post.comments &&
+                              post.comments.map((comment, index) => (
+                                <li
+                                  key={index}
+                                  className="text-sm text-gray-500 mb-2 p-2 bg-slate-50 rounded-md"
+                                >
+                                  <p className="font-bold">{comment.author}</p>
+                                  <p>{comment.text}</p>
+                                </li>
+                              ))}
+                          </ul>
+                          <ul>
                             {postComments[post.id]?.map((comment, index) => (
                               <li
                                 key={index}
-                                className="text-sm text-gray-600 mb-2 p-2 bg-slate-100 rounded-md"
+                                className="text-sm text-gray-500 mb-2 p-2 bg-slate-50 rounded-md"
                               >
                                 {comment}
                               </li>
@@ -537,7 +575,9 @@ const Home: React.FC = () => {
                           />
                           <button
                             className="bg-blue-500 text-white py-1 px-4 rounded-lg mt-2"
-                            onClick={() => handleAddComment(post.id)}
+                            onClick={() =>
+                              handleAddComment(post.id, post.docId)
+                            }
                           >
                             Comment
                           </button>
@@ -545,6 +585,7 @@ const Home: React.FC = () => {
                       </div>
                     )}
                   </div>
+                  ;
                 </div>
               ))}
 
