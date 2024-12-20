@@ -46,8 +46,8 @@ const Login: React.FC = () => {
   ];
 
   return (
-    <main className="flex justify-center items-center h-screen bg-gray-100">
-      <div className="w-full max-w-md bg-white p-8 rounded-xl shadow-2xl border-4 border-blue-200 animate-border-rgb">
+    <main className="flex justify-center items-center h-screen  bg-gray-100">
+      <div className="w-full max-w-md bg-white m-4 p-8 rounded-xl shadow-2xl ">
         <h1 className="mb-6 text-2xl font-bold text-gray-800 text-center">
           Login
         </h1>
@@ -84,10 +84,12 @@ const Login: React.FC = () => {
           </div>
         </form>
 
-        <div className="text-center">
-          <span className="text-gray-700">No Account? Register </span>
+        <div className="flex justify-center gap-1 mt-4 text-sm">
+          <span className="text-gray-400">No Account? </span>
           <Link href="/signup">
-            <button className="text-blue-500 hover:underline">Here</button>
+            <button className="text-gray-500 font-semibold">
+              Register Here
+            </button>
           </Link>
         </div>
       </div>
