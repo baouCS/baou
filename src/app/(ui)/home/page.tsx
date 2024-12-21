@@ -14,16 +14,18 @@ import EmojiPicker, { EmojiClickData } from "emoji-picker-react";
 import { toSentenceCase } from "@/app/utils/toSentenceCase";
 import Header from "@/app/components/header";
 import { auth } from "@/services/firebaseConfig";
-import { getFormattedDate } from "@/app/utils/formatDate";
 import Swal from "sweetalert2";
 import { Post } from "@/app/lib/definitions";
 import Image from "next/image";
+import { getTimeDifference } from "@/app/utils/formatToTime";
+import { updatePostReactions } from "@/app/api/post/data";
 
 import {
   addPost,
   fetchPosts,
   updatePost,
   deletePost,
+  createComment,
 } from "@/app/api/post/data";
 import { FaDeleteLeft } from "react-icons/fa6";
 
@@ -47,12 +49,14 @@ const Home: React.FC = () => {
   const skeletonStyle = "animate-pulse bg-gray-300 rounded-md";
 
   const currentUser = auth.currentUser?.email;
+  const userId = auth.currentUser?.uid;
 
   const fetchData = async () => {
     try {
       const result = await fetchPosts();
       if (result.posts) {
         // Add the new posts to the state only if they don't already exist
+
         setPosts((prevPosts) => {
           const newPosts = result.posts.filter(
             (newPost) =>
@@ -100,7 +104,7 @@ const Home: React.FC = () => {
       text: text.replace(/(\r?\n\s*\n){3,}/g, "\n\n"),
       status,
       bgColor: statusColors[status],
-      date: getFormattedDate(),
+      date: Date(),
       comments: [],
       image: image ? image : null,
     };
@@ -158,33 +162,61 @@ const Home: React.FC = () => {
     }
   };
 
-  const handleLike = (id: number) => {
-    setPosts((prev) =>
-      prev.map((post) =>
-        post.id === id ? { ...post, likes: post.likes + 1 } : post
-      )
-    );
-  };
+  const handleLike = async (id: number, userId: string) => {
+    const post = posts.find((post) => post.id === id);
+    if (!post) return;
 
-  const handleDislike = (id: number) => {
-    setPosts((prev) =>
-      prev.map((post) =>
-        post.id === id ? { ...post, dislikes: post.dislikes + 1 } : post
-      )
-    );
-  };
-
-  const handleAddComment = (postId: number) => {
-    if (newComment.trim()) {
-      setPostComments((prevComments) => ({
-        ...prevComments,
-        [postId]: [...(prevComments[postId] || []), newComment.trim()],
-      }));
-      setNewComment("");
+    try {
+      const updatedPost = await updatePostReactions(post, userId, "like");
+      setPosts((prev) => prev.map((p) => (p.id === id ? updatedPost : p)));
+    } catch (error) {
+      console.error("Failed to like post:", error);
     }
   };
 
-  const toggleComments = (id: number) => {
+  const handleDislike = async (id: number, userId: string) => {
+    const post = posts.find((post) => post.id === id);
+    if (!post) return;
+
+    try {
+      const updatedPost = await updatePostReactions(post, userId, "dislike");
+      setPosts((prev) => prev.map((p) => (p.id === id ? updatedPost : p)));
+    } catch (error) {
+      console.error("Failed to dislike post:", error);
+    }
+  };
+
+  const handleAddComment = async (postId: number, docId: string) => {
+    if (newComment.trim()) {
+      try {
+        // Call API to persist the comment
+        const commentData = {
+          text: newComment.trim(),
+          author: currentUser || "user",
+        };
+
+        const response = await createComment(docId, commentData);
+
+        if (response.success && response.comment) {
+          // Update UI state after successful API call
+          setPostComments((prevComments) => ({
+            ...prevComments,
+            [postId]: [
+              ...(prevComments[postId] || []),
+              response.comment.text, // Add the new comment text to the UI
+            ],
+          }));
+          setNewComment("");
+        } else {
+          console.error("Failed to add comment:", response.message);
+        }
+      } catch (error) {
+        console.error("Error adding comment:", error);
+      }
+    }
+  };
+
+  const toggleComments = (id: number, docId: string) => {
     setShowCommentsId((prev) => (prev === id ? null : id));
   };
 
@@ -297,6 +329,10 @@ const Home: React.FC = () => {
     fetchData();
   }, []);
 
+  useEffect(() => {
+    console.log(posts);
+  }, [posts]);
+
   return (
     <div className="flex  flex-col items-center  h-screen bg-gray-100 overflow-clip">
       <Header />
@@ -332,7 +368,7 @@ const Home: React.FC = () => {
                 placeholder="What's on your mind?"
               />
             </div>
-            <div className="flex w-full mt-4 justify-between">
+            <div className="flex w-full mt-4  justify-between">
               <div className="flex gap-2">
                 <div className="">
                   <button
@@ -416,7 +452,7 @@ const Home: React.FC = () => {
                   className="mb-4 p-4 rounded-lg shadow-lg bg-white"
                 >
                   <div className="flex justify-between gap-2">
-                    <div className="w-full flex flex-col gap-2">
+                    <div className="w-full flex flex-col  gap-2">
                       {post.image && (
                         <Image
                           src={URL.createObjectURL(post.image)}
@@ -484,28 +520,42 @@ const Home: React.FC = () => {
                       )}
                     </div>
                   </div>
-
-                  <div className="post">
-                    <div className="flex gap-4 justify-between px-4">
-                      <p className="text-xs text-gray-500 mt-4">{post.date}</p>
+                  {/* post section */}
+                  <div className="post ">
+                    <div className="flex  gap-4  justify-between px-4">
+                      <p className="text-xs text-gray-500 mt-4">
+                        {getTimeDifference(post.date)}
+                      </p>
                       <div className="flex justify-end space-x-4 mt-2">
                         <button
                           className="flex items-center text-gray-500 hover:text-blue-600 transition"
-                          onClick={() => toggleComments(post.id)}
+                          onClick={() => toggleComments(post.id, post.docId)}
                         >
                           <FaCommentAlt className="mr-1" />
-                          <span>{postComments[post.id]?.length || 0}</span>
+                          <span>{post.comments?.length || 0}</span>
                         </button>
                         <button
                           className="flex items-center text-gray-500 hover:text-blue-600 transition"
-                          onClick={() => handleLike(post.id)}
+                          onClick={() => {
+                            if (!userId) {
+                              alert("You must be logged in to react.");
+                              return;
+                            }
+                            handleLike(post.id, userId);
+                          }}
                         >
                           <FaThumbsUp className="mr-1" />
                           <span>{post.likes}</span>
                         </button>
                         <button
                           className="flex items-center text-gray-500 hover:text-red-600 transition"
-                          onClick={() => handleDislike(post.id)}
+                          onClick={() => {
+                            if (!userId) {
+                              alert("You must be logged in to react.");
+                              return;
+                            }
+                            handleDislike(post.id, userId);
+                          }}
                         >
                           <FaThumbsDown className="mr-1" />
                           <span>{post.dislikes}</span>
@@ -515,18 +565,77 @@ const Home: React.FC = () => {
 
                     {/* Comment Section */}
                     {showCommentsId === post.id && (
-                      <div className=" mt-4 p-4 border-t border-gray-300">
-                        <div className="comments">
-                          <ul>
+                      <div className="mt-4 p-4  ">
+                        <div className="comments max-h-[300px] overflow-y-auto">
+                          <ul className="gap-4">
+                            {post.comments &&
+                              post.comments
+                                .sort(
+                                  (a, b) =>
+                                    new Date(b.date).getTime() -
+                                    new Date(a.date).getTime()
+                                ) // Sort by latest date
+                                .map((comment, index) => (
+                                  <li
+                                    key={index}
+                                    className={`text-sm text-gray-500 p-4 ${
+                                      index !== post.comments.length - 1
+                                        ? "border-b"
+                                        : ""
+                                    }`}
+                                  >
+                                    <p className="flex justify-between">
+                                      <span className="font-bold mb-2">
+                                        {comment.author.split("@gmail.com")}
+                                      </span>
+                                      <span className="text-xs text-gray-400">
+                                        {getTimeDifference(comment.date)}
+                                      </span>
+                                    </p>
+                                    <p>{comment.text}</p>
+                                  </li>
+                                ))}
+                          </ul>
+
+                          <ul className="gap-4">
+                            {postComments[post.id]
+                              ?.sort(
+                                (a, b) =>
+                                  new Date(b.date).getTime() -
+                                  new Date(a.date).getTime()
+                              ) // Sort by latest date
+                              .map((comment, index) => (
+                                <li
+                                  key={index}
+                                  className={`text-sm text-gray-500 p-4 ${
+                                    index !== post.comments.length - 1
+                                      ? "border-b"
+                                      : ""
+                                  }`}
+                                >
+                                  <p className="flex justify-between">
+                                    <span className="font-bold mb-2">
+                                      {currentUser?.split("@gmail.com")}
+                                    </span>
+                                  </p>
+                                  <p> {comment}</p>
+                                </li>
+                              ))}
+                          </ul>
+
+                          {/* <ul className=" gap-4">
                             {postComments[post.id]?.map((comment, index) => (
                               <li
                                 key={index}
-                                className="text-sm text-gray-600 mb-2 p-2 bg-slate-100 rounded-md"
+                                className="text-sm text-gray-500 mb-2 p-4"
                               >
-                                {comment}
+                                <p className="font-bold mb-2">
+                                  {currentUser?.split("@gmail.com")}
+                                </p>
+                                <p> {comment}</p>
                               </li>
                             ))}
-                          </ul>
+                          </ul> */}
                         </div>
                         <div className="add-comment">
                           <textarea
@@ -537,7 +646,9 @@ const Home: React.FC = () => {
                           />
                           <button
                             className="bg-blue-500 text-white py-1 px-4 rounded-lg mt-2"
-                            onClick={() => handleAddComment(post.id)}
+                            onClick={() =>
+                              handleAddComment(post.id, post.docId)
+                            }
                           >
                             Comment
                           </button>
@@ -545,6 +656,7 @@ const Home: React.FC = () => {
                       </div>
                     )}
                   </div>
+                  ;
                 </div>
               ))}
 

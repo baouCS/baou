@@ -11,8 +11,7 @@ export interface SignUpResponse {
   status: number | string;
 }
 export interface Comment {
-  userId: string;
-  username: string;
+  author: string;
   text: string;
   date: string;
 }
@@ -28,4 +27,5 @@ export interface Post {
   dislikes: number;
   comments: Comment[];
   image?: File | null;
+  reactions: { [userId: string]: "like" | "dislike" };
 }
