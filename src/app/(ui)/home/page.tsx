@@ -314,6 +314,14 @@ const Home: React.FC = () => {
     }
   };
 
+  // Memoize the onChange handler
+  const handleTextChange = useCallback(
+    (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+      setText(e.target.value);
+    },
+    []
+  );
+
   useEffect(() => {
     if (isEmojiPickerOpen) {
       document.addEventListener("click", handleOutsideClick);
@@ -334,7 +342,7 @@ const Home: React.FC = () => {
   }, [posts]);
 
   return (
-    <div className="flex  flex-col items-center  h-screen bg-gray-100 overflow-clip">
+    <div className="flex  flex-col items-center h-dvh bg-gray-100 overflow-clip">
       <Header />
 
       <div className="flex items-center w-full max-w-3xl flex-col lg:px-4 lg:bg-gray-200 h-full">
@@ -362,9 +370,9 @@ const Home: React.FC = () => {
               )}
 
               <textarea
-                className="w-full text-gray-500  h-24 p-2 border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-400"
+                className="w-full text-gray-500 h-24 p-2 border rounded-lg resize- focus:outline-none focus:ring-2 focus:ring-blue-400"
                 value={text}
-                onChange={(e) => setText(e.target.value)}
+                onChange={handleTextChange}
                 placeholder="What's on your mind?"
               />
             </div>
@@ -575,7 +583,7 @@ const Home: React.FC = () => {
                       {/* Comment Section */}
 
                       {showCommentsId === post.id && (
-                        <div className="mt-4 p-4">
+                        <div className="mt-4 p-4 h-full">
                           <div className="comments max-h-[300px] overflow-y-auto">
                             <ul className="gap-4">
                               {post.comments &&
@@ -650,7 +658,7 @@ const Home: React.FC = () => {
                             <textarea
                               className="w-full p-2 border text-gray-500 rounded-lg mt-2"
                               value={newComment}
-                              onChange={(e) => setNewComment(e.target.value)}
+                              onChange={handleTextChange}
                               placeholder="Send a comment here..."
                             />
                             <button
