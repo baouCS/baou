@@ -446,214 +446,228 @@ const Home: React.FC = () => {
                   </div>
                 ))
             : // Render posts
-              posts.map((post) => (
-                <div
-                  key={post.id}
-                  className="mb-4 p-4 rounded-lg shadow-lg bg-white"
-                >
-                  <div className="flex justify-between gap-2">
-                    <div className="w-full flex flex-col  gap-2">
-                      {post.image && (
-                        <Image
-                          src={URL.createObjectURL(post.image)}
-                          alt="Uploaded Preview"
-                          className="w-full rounded-md"
-                          width={100}
-                          height={100}
-                        />
-                      )}
-                      <p className="text-gray-500 font-medium whitespace-pre-wrap p-4 bg-slate-50 shadow-inner bg-opacity-10 border-gray-300 border-b border-opacity-20 rounded-md py-4">
-                        {toSentenceCase(post.text)}
-                      </p>
-                    </div>
-                    <div className="relative flex flex-col gap-2">
-                      {/* //status mark */}
-                      {post.bgColor !== "#ffffff" ? (
-                        <div
-                          className={`relative z-50 w-4 h-4 shadow-sm rounded-full`}
-                          style={{ backgroundColor: post.bgColor }}
-                          title={
-                            post.bgColor === "#22c55e"
-                              ? "Low Priority"
-                              : post.bgColor === "#eab308"
-                              ? "Medium Priority"
-                              : post.bgColor === "#ef4444"
-                              ? "High Priority"
-                              : ""
-                          }
-                        ></div>
-                      ) : (
-                        ""
-                      )}
+              posts &&
+              posts
+                .slice() // Create a shallow copy of the posts array to avoid direct mutation
+                .sort((a, b) => {
+                  const dateA =
+                    a.date instanceof Timestamp ? a.date.toMillis() : 0;
+                  const dateB =
+                    b.date instanceof Timestamp ? b.date.toMillis() : 0;
+                  return dateB - dateA; // Sort in descending order, latest post goes at the top
+                })
+                .map((post) => (
+                  <div
+                    key={post.id}
+                    className="mb-4 p-4 rounded-lg shadow-lg bg-white"
+                  >
+                    <div className="flex justify-between gap-2">
+                      <div className="w-full flex flex-col  gap-2">
+                        {post.image && (
+                          <Image
+                            src={URL.createObjectURL(post.image)}
+                            alt="Uploaded Preview"
+                            className="w-full rounded-md"
+                            width={100}
+                            height={100}
+                          />
+                        )}
+                        <p className="text-gray-500 font-medium whitespace-pre-wrap p-4 bg-slate-50 shadow-inner bg-opacity-10 border-gray-300 border-b border-opacity-20 rounded-md py-4">
+                          {toSentenceCase(post.text)}
+                        </p>
+                      </div>
+                      <div className="relative flex flex-col gap-2">
+                        {/* //status mark */}
+                        {post.bgColor !== "#ffffff" ? (
+                          <div
+                            className={`relative z-50 w-4 h-4 shadow-sm rounded-full`}
+                            style={{ backgroundColor: post.bgColor }}
+                            title={
+                              post.bgColor === "#22c55e"
+                                ? "Low Priority"
+                                : post.bgColor === "#eab308"
+                                ? "Medium Priority"
+                                : post.bgColor === "#ef4444"
+                                ? "High Priority"
+                                : ""
+                            }
+                          ></div>
+                        ) : (
+                          ""
+                        )}
 
-                      {currentUser == "admin@gmail.com" && (
-                        <>
-                          <button
-                            className="text-gray-400 hover:text-gray-500 focus:outline-none"
-                            onClick={() => toggleDropdown(post.id)}
-                          >
-                            <FaEllipsisV />
-                          </button>
-                          {activeDropdownId === post.id && (
-                            <div className="absolute border right-6 w-fit bg-white rounded-md shadow-lg z-10">
-                              <button
-                                className="block px-4 py-2 text-gray-700 w-full hover:bg-gray-100"
-                                onClick={() =>
-                                  handleEdit(post.id, post.docId, post.image)
-                                }
-                              >
-                                {/* Edit */}
-                                <FaEdit />
-                              </button>
-                              <button
-                                className="block px-4 py-2 text-red-600 hover:bg-gray-100"
-                                onClick={() =>
-                                  handleDelete(post.id, post.docId)
-                                }
-                              >
-                                {/* Delete */}
-                                <FaDeleteLeft />
-                              </button>
-                            </div>
-                          )}
-                        </>
-                      )}
-                    </div>
-                  </div>
-                  {/* post section */}
-                  <div className="post ">
-                    <div className="flex  gap-4  justify-between px-4">
-                      <p className="text-xs text-gray-500 mt-4">
-                        {post.date && getTimeDifference(post.date)}
-                      </p>
-                      <div className="flex justify-end space-x-4 mt-2">
-                        <button
-                          className="flex items-center text-gray-500 hover:text-blue-600 transition"
-                          onClick={() => toggleComments(post.id, post.docId)}
-                        >
-                          <FaCommentAlt className="mr-1" />
-                          <span>{post.comments?.length || 0}</span>
-                        </button>
-                        <button
-                          className="flex items-center text-gray-500 hover:text-blue-600 transition"
-                          onClick={() => {
-                            if (!userId) {
-                              alert("You must be logged in to react.");
-                              return;
-                            }
-                            handleLike(post.id, userId);
-                          }}
-                        >
-                          <FaThumbsUp className="mr-1" />
-                          <span>{post.likes}</span>
-                        </button>
-                        <button
-                          className="flex items-center text-gray-500 hover:text-red-600 transition"
-                          onClick={() => {
-                            if (!userId) {
-                              alert("You must be logged in to react.");
-                              return;
-                            }
-                            handleDislike(post.id, userId);
-                          }}
-                        >
-                          <FaThumbsDown className="mr-1" />
-                          <span>{post.dislikes}</span>
-                        </button>
+                        {currentUser == "admin@gmail.com" && (
+                          <>
+                            <button
+                              className="text-gray-400 hover:text-gray-500 focus:outline-none"
+                              onClick={() => toggleDropdown(post.id)}
+                            >
+                              <FaEllipsisV />
+                            </button>
+                            {activeDropdownId === post.id && (
+                              <div className="absolute border right-6 w-fit bg-white rounded-md shadow-lg z-10">
+                                <button
+                                  className="block px-4 py-2 text-gray-700 w-full hover:bg-gray-100"
+                                  onClick={() =>
+                                    handleEdit(post.id, post.docId, post.image)
+                                  }
+                                >
+                                  {/* Edit */}
+                                  <FaEdit />
+                                </button>
+                                <button
+                                  className="block px-4 py-2 text-red-600 hover:bg-gray-100"
+                                  onClick={() =>
+                                    handleDelete(post.id, post.docId)
+                                  }
+                                >
+                                  {/* Delete */}
+                                  <FaDeleteLeft />
+                                </button>
+                              </div>
+                            )}
+                          </>
+                        )}
                       </div>
                     </div>
-                    {/* Comment Section */}
+                    {/* post section */}
+                    <div className="post ">
+                      <div className="flex  gap-4  justify-between px-4">
+                        <p className="text-xs text-gray-500 mt-4">
+                          {post.date && getTimeDifference(post.date)}
+                        </p>
+                        <div className="flex justify-end space-x-4 mt-2">
+                          <button
+                            className="flex items-center text-gray-500 hover:text-blue-600 transition"
+                            onClick={() => toggleComments(post.id, post.docId)}
+                          >
+                            <FaCommentAlt className="mr-1" />
+                            <span>{post.comments?.length || 0}</span>
+                          </button>
+                          <button
+                            className="flex items-center text-gray-500 hover:text-blue-600 transition"
+                            onClick={() => {
+                              if (!userId) {
+                                alert("You must be logged in to react.");
+                                return;
+                              }
+                              handleLike(post.id, userId);
+                            }}
+                          >
+                            <FaThumbsUp className="mr-1" />
+                            <span>{post.likes}</span>
+                          </button>
+                          <button
+                            className="flex items-center text-gray-500 hover:text-red-600 transition"
+                            onClick={() => {
+                              if (!userId) {
+                                alert("You must be logged in to react.");
+                                return;
+                              }
+                              handleDislike(post.id, userId);
+                            }}
+                          >
+                            <FaThumbsDown className="mr-1" />
+                            <span>{post.dislikes}</span>
+                          </button>
+                        </div>
+                      </div>
+                      {/* Comment Section */}
 
-                    {showCommentsId === post.id && (
-                      <div className="mt-4 p-4">
-                        <div className="comments max-h-[300px] overflow-y-auto">
-                          <ul className="gap-4">
-                            {post.comments &&
-                              post.comments
-                                .slice()
-                                .sort((a, b) => {
-                                  const millisA =
-                                    a.date instanceof Timestamp
-                                      ? a.date.toMillis()
-                                      : 0;
-                                  const millisB =
-                                    b.date instanceof Timestamp
-                                      ? b.date.toMillis()
-                                      : 0;
+                      {showCommentsId === post.id && (
+                        <div className="mt-4 p-4">
+                          <div className="comments max-h-[300px] overflow-y-auto">
+                            <ul className="gap-4">
+                              {post.comments &&
+                                post.comments
+                                  .slice()
+                                  .sort((a, b) => {
+                                    const millisA =
+                                      a.date instanceof Timestamp
+                                        ? a.date.toMillis()
+                                        : 0;
+                                    const millisB =
+                                      b.date instanceof Timestamp
+                                        ? b.date.toMillis()
+                                        : 0;
 
-                                  return millisB - millisA;
-                                })
+                                    return millisB - millisA;
+                                  })
+                                  .map((comment, index) => (
+                                    <li
+                                      key={index}
+                                      className={`text-sm text-gray-500 p-4 ${
+                                        index !== post.comments.length - 1
+                                          ? "border-b"
+                                          : ""
+                                      }`}
+                                    >
+                                      <p className="flex justify-between">
+                                        <span className="font-bold mb-2">
+                                          {
+                                            comment.author.split(
+                                              "@gmail.com"
+                                            )[0]
+                                          }{" "}
+                                        </span>
+                                        <span className="text-xs text-gray-400">
+                                          {comment.date &&
+                                            getTimeDifference(comment.date)}
+                                        </span>
+                                      </p>
+                                      <p>{comment.text}</p>
+                                    </li>
+                                  ))}
+                            </ul>
+
+                            <ul className="gap-4">
+                              {postComments[post.id]
+                                ?.slice()
                                 .map((comment, index) => (
                                   <li
                                     key={index}
                                     className={`text-sm text-gray-500 p-4 ${
-                                      index !== post.comments.length - 1
+                                      index !== postComments[post.id].length - 1
                                         ? "border-b"
                                         : ""
                                     }`}
                                   >
                                     <p className="flex justify-between">
                                       <span className="font-bold mb-2">
-                                        {comment.author.split("@gmail.com")[0]}{" "}
+                                        {currentUser?.split("@gmail.com")}
                                       </span>
                                       <span className="text-xs text-gray-400">
-                                        {comment.date &&
-                                          getTimeDifference(comment.date)}
+                                        {comment &&
+                                          getTimeDifference(Timestamp.now())}
                                       </span>
                                     </p>
-                                    <p>{comment.text}</p>
+                                    <p>{comment}</p>
                                   </li>
                                 ))}
-                          </ul>
-
-                          <ul className="gap-4">
-                            {postComments[post.id]
-                              ?.slice()
-                              .map((comment, index) => (
-                                <li
-                                  key={index}
-                                  className={`text-sm text-gray-500 p-4 ${
-                                    index !== postComments[post.id].length - 1
-                                      ? "border-b"
-                                      : ""
-                                  }`}
-                                >
-                                  <p className="flex justify-between">
-                                    <span className="font-bold mb-2">
-                                      {currentUser?.split("@gmail.com")}
-                                    </span>
-                                    <span className="text-xs text-gray-400">
-                                      {comment &&
-                                        getTimeDifference(Timestamp.now())}
-                                    </span>
-                                  </p>
-                                  <p>{comment}</p>
-                                </li>
-                              ))}
-                          </ul>
+                            </ul>
+                          </div>
+                          <div className="add-comment">
+                            <textarea
+                              className="w-full p-2 border text-gray-500 rounded-lg mt-2"
+                              value={newComment}
+                              onChange={(e) => setNewComment(e.target.value)}
+                              placeholder="Send a comment here..."
+                            />
+                            <button
+                              className="bg-blue-500 text-white py-1 px-4 rounded-lg mt-2"
+                              onClick={() =>
+                                handleAddComment(post.id, post.docId)
+                              }
+                            >
+                              Comment
+                            </button>
+                          </div>
                         </div>
-                        <div className="add-comment">
-                          <textarea
-                            className="w-full p-2 border text-gray-500 rounded-lg mt-2"
-                            value={newComment}
-                            onChange={(e) => setNewComment(e.target.value)}
-                            placeholder="Send a comment here..."
-                          />
-                          <button
-                            className="bg-blue-500 text-white py-1 px-4 rounded-lg mt-2"
-                            onClick={() =>
-                              handleAddComment(post.id, post.docId)
-                            }
-                          >
-                            Comment
-                          </button>
-                        </div>
-                      </div>
-                    )}
+                      )}
+                    </div>
+                    ;
                   </div>
-                  ;
-                </div>
-              ))}
+                ))}
 
           {!loading
             ? currentUser && currentUser.toLowerCase() == "admin@gmail.com"
