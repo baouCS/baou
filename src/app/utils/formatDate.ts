@@ -1,4 +1,4 @@
-export const getFormattedDate = () => {
+export const getFormattedDate = (date: unknown) => {
   const now = new Date();
   return now.toLocaleString("en-US", {
     weekday: "short",

@@ -1,3 +1,5 @@
+import { Timestamp } from "firebase/firestore";
+
 export interface signupFormData {
   username: string;
   email: string;
@@ -13,7 +15,7 @@ export interface SignUpResponse {
 export interface Comment {
   author: string;
   text: string;
-  date: string;
+  date: Timestamp;
 }
 
 export interface Post {
@@ -22,10 +24,10 @@ export interface Post {
   text: string;
   status: string;
   bgColor: string;
-  date: string;
+  date: Timestamp;
   likes: number;
   dislikes: number;
   comments: Comment[];
   image?: File | null;
-  reactions: { [userId: string]: "like" | "dislike" };
+  reactions?: { [userId: string]: "like" | "dislike" };
 }

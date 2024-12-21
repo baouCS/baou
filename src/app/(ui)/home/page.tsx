@@ -28,6 +28,7 @@ import {
   createComment,
 } from "@/app/api/post/data";
 import { FaDeleteLeft } from "react-icons/fa6";
+import { Timestamp } from "firebase/firestore";
 
 const Home: React.FC = () => {
   const [posts, setPosts] = useState<Post[]>([]);
@@ -104,7 +105,7 @@ const Home: React.FC = () => {
       text: text.replace(/(\r?\n\s*\n){3,}/g, "\n\n"),
       status,
       bgColor: statusColors[status],
-      date: Date(),
+      date: Timestamp.now(),
       comments: [],
       image: image ? image : null,
     };
@@ -161,7 +162,6 @@ const Home: React.FC = () => {
       console.error("Error during delete operation: ", error);
     }
   };
-
   const handleLike = async (id: number, userId: string) => {
     const post = posts.find((post) => post.id === id);
     if (!post) return;
@@ -524,7 +524,7 @@ const Home: React.FC = () => {
                   <div className="post ">
                     <div className="flex  gap-4  justify-between px-4">
                       <p className="text-xs text-gray-500 mt-4">
-                        {getTimeDifference(post.date)}
+                        {post.date && getTimeDifference(post.date)}
                       </p>
                       <div className="flex justify-end space-x-4 mt-2">
                         <button
@@ -562,19 +562,27 @@ const Home: React.FC = () => {
                         </button>
                       </div>
                     </div>
-
                     {/* Comment Section */}
+
                     {showCommentsId === post.id && (
-                      <div className="mt-4 p-4  ">
+                      <div className="mt-4 p-4">
                         <div className="comments max-h-[300px] overflow-y-auto">
                           <ul className="gap-4">
                             {post.comments &&
                               post.comments
-                                .sort(
-                                  (a, b) =>
-                                    new Date(b.date).getTime() -
-                                    new Date(a.date).getTime()
-                                ) // Sort by latest date
+                                .slice()
+                                .sort((a, b) => {
+                                  const millisA =
+                                    a.date instanceof Timestamp
+                                      ? a.date.toMillis()
+                                      : 0;
+                                  const millisB =
+                                    b.date instanceof Timestamp
+                                      ? b.date.toMillis()
+                                      : 0;
+
+                                  return millisB - millisA;
+                                })
                                 .map((comment, index) => (
                                   <li
                                     key={index}
@@ -586,10 +594,11 @@ const Home: React.FC = () => {
                                   >
                                     <p className="flex justify-between">
                                       <span className="font-bold mb-2">
-                                        {comment.author.split("@gmail.com")}
+                                        {comment.author.split("@gmail.com")[0]}{" "}
                                       </span>
                                       <span className="text-xs text-gray-400">
-                                        {getTimeDifference(comment.date)}
+                                        {comment.date &&
+                                          getTimeDifference(comment.date)}
                                       </span>
                                     </p>
                                     <p>{comment.text}</p>
@@ -599,16 +608,12 @@ const Home: React.FC = () => {
 
                           <ul className="gap-4">
                             {postComments[post.id]
-                              ?.sort(
-                                (a, b) =>
-                                  new Date(b.date).getTime() -
-                                  new Date(a.date).getTime()
-                              ) // Sort by latest date
+                              ?.slice()
                               .map((comment, index) => (
                                 <li
                                   key={index}
                                   className={`text-sm text-gray-500 p-4 ${
-                                    index !== post.comments.length - 1
+                                    index !== postComments[post.id].length - 1
                                       ? "border-b"
                                       : ""
                                   }`}
@@ -617,25 +622,15 @@ const Home: React.FC = () => {
                                     <span className="font-bold mb-2">
                                       {currentUser?.split("@gmail.com")}
                                     </span>
+                                    <span className="text-xs text-gray-400">
+                                      {comment &&
+                                        getTimeDifference(Timestamp.now())}
+                                    </span>
                                   </p>
-                                  <p> {comment}</p>
+                                  <p>{comment}</p>
                                 </li>
                               ))}
                           </ul>
-
-                          {/* <ul className=" gap-4">
-                            {postComments[post.id]?.map((comment, index) => (
-                              <li
-                                key={index}
-                                className="text-sm text-gray-500 mb-2 p-4"
-                              >
-                                <p className="font-bold mb-2">
-                                  {currentUser?.split("@gmail.com")}
-                                </p>
-                                <p> {comment}</p>
-                              </li>
-                            ))}
-                          </ul> */}
                         </div>
                         <div className="add-comment">
                           <textarea
