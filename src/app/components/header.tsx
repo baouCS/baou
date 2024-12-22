@@ -25,8 +25,7 @@ const Header: React.FC = () => {
   return (
     <header className="flex justify-between w-full items-center p-4 bg-blue-500 text-white">
       <div className="font-bold text-gray-100">
-        <h1 className=" ">
-          {" "}
+        <h1 className="text-sm xs:text-sm sm:text-xl md:text-xl lg:text-xl xl:text-2xl font-bold">
           <span>BOU |</span> BAYUYAN ONLINE UPDATE
         </h1>
       </div>
