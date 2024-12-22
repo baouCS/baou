@@ -11,6 +11,7 @@ import {
 } from "firebase/firestore";
 import { Post } from "@/app/lib/definitions";
 import { getFormattedDate } from "@/app/utils/formatDate";
+import { Timestamp } from "firebase/firestore";
 
 interface UpdatePostData {
   docId: string;
@@ -19,7 +20,10 @@ interface UpdatePostData {
 
 // Function to add a new post to Firebase Firestore
 export const addPost = async (
-  postData: Omit<Post, "date" | "likes" | "dislikes" | "docId" | "comments">
+  postData: Omit<
+    Post,
+    "date" | "likes" | "dislikes" | "docId" | "comments" | "reaction"
+  >
 ) => {
   try {
     const { image, ...restData } = postData;
@@ -31,7 +35,7 @@ export const addPost = async (
     const newPost = {
       ...restData,
       imageUrl,
-      date: new Date().toISOString(),
+      date: Timestamp.now(),
       likes: 0,
       dislikes: 0,
       comments: [],
@@ -72,7 +76,7 @@ export const fetchPosts = async () => {
         text: data.text || "",
         status: data.status || "",
         bgColor: data.bgColor || "",
-        date: getFormattedDate(),
+        date: data.date,
         likes: data.likes || 0,
         dislikes: data.dislikes || 0,
         docId: doc.id,

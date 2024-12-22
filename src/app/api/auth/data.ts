@@ -1,13 +1,35 @@
 import { db, auth } from "@/services/firebaseConfig";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { createUserWithEmailAndPassword } from "firebase/auth";
-import { Timestamp, setDoc, doc } from "firebase/firestore";
+import {
+  collection,
+  query,
+  where,
+  getDocs,
+  doc,
+  setDoc,
+  Timestamp,
+} from "firebase/firestore";
 import { SignUpResponse, signupFormData } from "@/app/lib/definitions";
 
 export const signup = async (data: signupFormData): Promise<SignUpResponse> => {
   const dateCreated = Timestamp.fromDate(new Date());
 
   try {
+    // Check if the email is already taken
+    const usersRef = collection(db, "users");
+    const emailQuery = query(usersRef, where("email", "==", data.email));
+    const emailQuerySnapshot = await getDocs(emailQuery);
+
+    if (!emailQuerySnapshot.empty) {
+      return {
+        message:
+          "This email is already registered. Please use a different email.",
+        error: true,
+        status: 409, // HTTP Conflict
+      };
+    }
+
     // Signup using createUserWithEmailAndPassword function of Firebase
     await createUserWithEmailAndPassword(auth, data.email, data.password);
 
@@ -22,7 +44,6 @@ export const signup = async (data: signupFormData): Promise<SignUpResponse> => {
     const userDocRef = doc(db, "users", user.uid);
 
     // Exclude the password and confirmPassword fields from the data
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { password, confirmPassword, ...userData } = data;
 
     // Set the data in the document
@@ -37,7 +58,6 @@ export const signup = async (data: signupFormData): Promise<SignUpResponse> => {
       error: false,
       status: 201,
     };
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {
     return { error: true, message: error.message, status: error.code };
   }

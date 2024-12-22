@@ -1,6 +1,16 @@
-export const getTimeDifference = (date: string) => {
+import { Timestamp } from "firebase/firestore";
+
+export const getTimeDifference = (timestamp: Timestamp) => {
   const now = new Date();
-  const targetDate = new Date(date);
+  let targetDate;
+
+  // Check if the timestamp is a Firebase Timestamp object
+  if (timestamp instanceof Timestamp) {
+    targetDate = timestamp.toDate();
+  } else {
+    // If not, assume it's a Date object or a valid date string
+    targetDate = new Date(timestamp);
+  }
 
   const diffInMs = now.getTime() - targetDate.getTime();
 
