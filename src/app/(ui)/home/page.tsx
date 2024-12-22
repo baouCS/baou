@@ -337,10 +337,6 @@ const Home: React.FC = () => {
     fetchData();
   }, []);
 
-  useEffect(() => {
-    console.log(posts);
-  }, [posts]);
-
   return (
     <div className="flex  flex-col items-center h-dvh bg-gray-100 overflow-clip">
       <Header />

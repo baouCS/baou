@@ -78,25 +78,39 @@ const Signup: React.FC = () => {
         setServerError("");
 
         // Call the signup API
-        await signup(formData);
+        const result = await signup(formData);
 
-        // Swal success notification
-        await Swal.fire({
-          title: "Signup Successful!",
-          text: "You are now registered. Redirecting to your home...",
-          icon: "success",
-          confirmButtonText: "Go to home",
-          timer: 3000,
-          timerProgressBar: true,
-        });
+        if (result.error) {
+          // duplication error
+          await Swal.fire({
+            title: "Signup Failed!",
+            text: "Email already registered",
+            icon: "error",
+            showConfirmButton: false,
+            timer: 1000,
+            timerProgressBar: true,
+          });
 
-        const response = await login(formData.email, formData.password);
+          return;
+        } else {
+          // Swal success notification
+          await Swal.fire({
+            title: "Signup Successful!",
+            text: "You are now registered. Redirecting to your home...",
+            icon: "success",
+            confirmButtonText: "Go to home",
+            timer: 2000,
+            timerProgressBar: true,
+          });
 
-        // Redirect to the home
-        if (response) {
+          const response = await login(formData.email, formData.password);
+
+          // Redirect to the home
+          if (response) {
+          }
+          router.push("/home");
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
         }
-        router.push("/home");
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } catch (error: any) {
         // Swal error notification
         await Swal.fire({
