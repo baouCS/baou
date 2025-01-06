@@ -186,6 +186,7 @@ const Home: React.FC = () => {
   };
 
   const handleAddComment = async (postId: number, docId: string) => {
+    s;
     if (newComment.trim()) {
       try {
         // Call API to persist the comment
@@ -317,6 +318,13 @@ const Home: React.FC = () => {
   const handleTextChange = useCallback(
     (e: React.ChangeEvent<HTMLTextAreaElement>) => {
       setText(e.target.value);
+    },
+    []
+  );
+
+  const handleCommentChange = useCallback(
+    (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+      setNewComment(e.target.value);
     },
     []
   );
@@ -656,7 +664,7 @@ const Home: React.FC = () => {
                               <textarea
                                 className="w-full p-2 border text-gray-500 rounded-lg mt-2"
                                 value={newComment}
-                                onChange={handleTextChange}
+                                onChange={handleCommentChange}
                                 placeholder="Send a comment here..."
                               />
                               <button
@@ -671,7 +679,6 @@ const Home: React.FC = () => {
                           </div>
                         )}
                       </div>
-                      ;
                     </div>
                   ))}
 
