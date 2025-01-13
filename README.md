@@ -1,6 +1,6 @@
 ## Introduction
 
-This is a Next.js project that uses pnpm as the package manager and Firebase as the database. The project is designed to be a scalable and efficient web application with real-time database capabilities.
+This is Barangay Assistance Online update made using Next.js, and Firebase as the database.
 
 ## Features
 
