@@ -1,6 +1,6 @@
 ## Introduction
 
-This is Barangay Assistance Online update made using Next.js, and Firebase as the database.
+This is Barangay Bayuyan Assistance Online update made using Next.js, and Firebase as the database.
 
 ## Features
 
