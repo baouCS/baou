@@ -4,7 +4,21 @@ This is a Next.js project that uses pnpm as the package manager and Firebase as 
 
 ## Features
 
-- **Next.js**: A React framework for server-side rendering and static site generation.
+- login
+- Signup
+- Dashboard
+- Post section
+   - create post
+   - add image
+   - add emoji
+   - add level of importance
+   - react
+   - add comment
+- logout 
+  
+
+## Tech/Language
+- **Next.js**: A React framework for server-side rendering and static site generation(Javascript, HTML, CSS(Tailwind).
 - **pnpm**: A fast, disk space-efficient package manager.
 - **Firebase**: A platform for building web and mobile applications with real-time database, authentication, and hosting.
 - **Vercel**: Used hosting site.
